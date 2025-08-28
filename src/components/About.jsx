@@ -486,13 +486,53 @@ const CSS = `
 .ab-team-text span{ font-size:12px; color:var(--ab-muted); }
 
 /* FAQ */
+/* FAQ */
 .ab-faq{ max-width:900px; margin:0 auto; display:grid; gap:8px; }
-.ab-faq-item{ border:1px solid var(--ab-border); border-radius:14px; background:rgba(255,255,255,.04); overflow:hidden; }
-.ab-faq-q{ width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px; text-align:left; color:var(--ab-fg); font-weight:600;
-  padding:14px 16px; background:transparent; border:none; cursor:pointer; }
+
+.ab-faq-item{
+  border:1px solid var(--ab-border);
+  border-radius:14px;
+  background:rgba(255,255,255,.04);
+  overflow:hidden;
+}
+
+.ab-faq-q{
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  text-align:left;
+  color:var(--ab-fg);
+  font-weight:600;
+  padding:14px 16px;
+  background:transparent;
+  border:none;
+  cursor:pointer;
+}
+
 .ab-faq-caret{ transition: transform .2s var(--ab-ease); opacity:.9; }
 .ab-faq-item.open .ab-faq-caret{ transform: rotate(180deg); }
-.ab-faq-a{ padding:0 16px 12px 16px; color:#e9e4ff; }
+
+/* ⬇️ Hide by default; animate open */
+.ab-faq-a{
+  max-height: 0;
+  overflow: hidden;
+  padding: 0 16px;           /* no bottom padding when closed */
+  color:#e9e4ff;
+  opacity: 0;
+  transition:
+    max-height .28s var(--ab-ease),
+    padding .28s var(--ab-ease),
+    opacity .28s var(--ab-ease);
+}
+
+.ab-faq-item.open .ab-faq-a{
+  max-height: 500px;         /* large enough for typical answers */
+  padding: 0 16px 12px 16px; /* add bottom padding when open */
+  opacity: 1;
+}
+
 .ab-faq-a p{ margin:0; opacity:.95; }
 
 /* CTA (optional) */
