@@ -861,3 +861,57 @@ grid-template-rows: 0fr 4.5fr 1fr!important;
     gap: 4px !important;
   }
 }
+
+/* Sectioned script layout */
+.script-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 680px) {
+  .script-grid { grid-template-columns: 1fr; } /* keep single column by default */
+}
+
+/* The little boxes */
+.script-box {
+  position: relative;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(165,92,255,0.28);                 /* subtle cosmic border */
+  background:
+    radial-gradient(120% 120% at 10% -10%, rgba(165,92,255,.10) 0%, rgba(165,92,255,0) 40%),
+    radial-gradient(120% 120% at 90% 110%, rgba(42,164,199,.10) 0%, rgba(42,164,199,0) 40%),
+    rgba(255,255,255,0.04);
+  backdrop-filter: blur(6px);
+}
+
+/* Label chip at the top-left of each box */
+.script-box__label {
+  display: inline-block;
+  font-size: 12px;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: #cfc5ff;
+  border: 1px solid rgba(165,92,255,0.35);
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
+  padding: 4px 8px;
+  margin-bottom: 8px;
+}
+
+/* Content inside each box (markdown) */
+.script-box__content {
+  color: #efeaff;
+  line-height: 1.55;
+}
+
+/* Optional per-section accents (adjust to taste) */
+.script-hook { border-color: rgba(165,92,255,0.40); }
+.script-body { border-color: rgba(42,164,199,0.35); }
+.script-cta  { border-color: rgba(255, 171, 64, 0.35); }
+
+/* If backdrop-filter unsupported, keep it readable */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .script-box { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(255,255,255,0.06); }
+}
