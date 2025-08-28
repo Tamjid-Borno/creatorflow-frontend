@@ -1,5 +1,5 @@
 // src/components/DoorwayPage.jsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { FaCopy } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import { auth, db } from "../firebase";
@@ -44,6 +44,18 @@ function DoorwayPage() {
       // trim trailing junk
       .replace(/(?:\s*\bundefined\b\s*)+$/i, "")
       .trim();
+  };
+
+  // 🔎 Parse sections like **Hook:** ... **Body:** ... **CTA:**
+  const parseScriptSections = (md) => {
+    if (!md) return null;
+    const rx = /\*\*(Hook|Body|CTA):\*\*([\s\S]*?)(?=\n{2,}\*\*(?:Hook|Body|CTA):\*\*|\s*$)/gi;
+    const out = [];
+    let m;
+    while ((m = rx.exec(md)) !== null) {
+      out.push({ key: m[1], content: (m[2] || "").trim() });
+    }
+    return out.length ? out : null;
   };
 
   // auth + initial user doc
@@ -107,7 +119,7 @@ function DoorwayPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ uid: user.uid, email: user.email }),
       });
-    } catch {/* ignore */}
+    } catch { /* ignore */ }
 
     const userRef = doc(db, "users", user.uid);
     const freshSnap = await getDoc(userRef);
@@ -197,6 +209,12 @@ function DoorwayPage() {
       .catch((err) => console.error("Failed to copy: ", err));
   };
 
+  // Build sections ONLY after generation completes (avoid flicker mid-type)
+  const sections = useMemo(
+    () => (!isThinking ? parseScriptSections(generatedText) : null),
+    [generatedText, isThinking]
+  );
+
   if (!user) {
     return (
       <div className="unauth-wrapper">
@@ -238,19 +256,16 @@ function DoorwayPage() {
       </div>
 
       <div className="content-wrapper">
-<div className="heading-container">
-  {/* BEFORE:
-  <img src={logo} alt="Logo" className="heading-logo" / loading="lazy" decoding="async">
-  */}
-  <img
-    src={logo}
-    alt="Logo"
-    className="heading-logo"
-    loading="lazy"
-    decoding="async"
-  />
-  <h1>CreatorFlow</h1>
-</div>
+        <div className="heading-container">
+          <img
+            src={logo}
+            alt="Logo"
+            className="heading-logo"
+            loading="lazy"
+            decoding="async"
+          />
+          <h1>CreatorFlow</h1>
+        </div>
 
         <div className="foreground-card">
           <h2>Your script:</h2>
@@ -261,8 +276,28 @@ function DoorwayPage() {
                 Thinking<span className="dots">...</span>
               </p>
             )}
-            {/* Make sure single \n render as visual line breaks too */}
-            <ReactMarkdown>{generatedText || ""}</ReactMarkdown>
+
+            {/* Show flowing markdown while generating; switch to section boxes when done */}
+            {(!sections || isThinking) ? (
+              <ReactMarkdown>{generatedText || ""}</ReactMarkdown>
+            ) : (
+              <div className="script-grid">
+                {sections.map((s) => (
+                  <section
+                    key={s.key}
+                    className={`script-box script-${s.key.toLowerCase()}`}
+                    aria-label={s.key}
+                  >
+                    <div className="script-box__label">{s.key}</div>
+                    <div className="script-box__content">
+                      <ReactMarkdown>{s.content}</ReactMarkdown>
+                    </div>
+                  </section>
+                ))}
+              </div>
+            )}
+
+            {/* Hidden copy source preserves full text */}
             <pre ref={preRef} style={{ display: "none" }}>{generatedText}</pre>
           </div>
 
