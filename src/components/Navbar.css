@@ -1,0 +1,441 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300..900&family=Sora:wght@400;500;600;700;800&display=swap');
+
+/* ========================
+   THEME TOKENS
+   ======================== */
+:root{
+  --bg: #0b0114;
+  --fg: #ffffff;
+  --accent: #a83dd5;
+
+  --cosmic-g1: #6f4dff; /* primary violet */
+  --cosmic-g2: #c14bff; /* primary magenta */
+  --cosmic-r1: #ff5aa6; /* danger pink */
+  --cosmic-r2: #ff6bd1; /* danger magenta */
+
+  --glass-blur: 12px;
+  --font-head: "Sora", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+
+  --radius: 20px;
+  --radius-sm: 14px;
+
+  --shadow-sm: 0 3px 14px rgba(0,0,0,0.25);
+  --shadow-md: 0 10px 28px rgba(0,0,0,0.28);
+
+  /* NAV HEIGHT used for fixed header + offsets */
+  --nav-h: clamp(56px, 8dvh, 70px);
+}
+
+/* Global content offset so fixed nav never overlaps */
+body { padding-top: var(--nav-h); }
+
+/* ========================
+   NAVBAR SHELL  (FIXED + GLASS)
+   ======================== */
+.custom-navbar {
+  position: fixed;           /* <— was sticky; fixed is robust on all pages */
+  top: 0; left: 0; right: 0;
+  z-index: 10000;
+  min-height: var(--nav-h);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: clamp(10px, 1.8dvh, 16px) clamp(16px, 3dvw, 60px);
+  color: var(--fg);
+  background: rgba(10,12,20,0.40);
+  border-bottom: 1px solid rgba(255,255,255,0.14);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+
+  transition: background .25s ease,
+              backdrop-filter .25s ease,
+              border-color .25s ease,
+              box-shadow .25s ease;
+}
+
+.custom-navbar.is-scrolled {
+  background: linear-gradient(180deg, rgba(7,2,14,0.78), rgba(7,2,14,0.50));
+  border-bottom: 1px solid rgba(255,255,255,0.18);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ========================
+   LOGO
+   ======================== */
+.navbar-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: 0;
+  padding: 4px;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.logo-img {
+  height: clamp(28px, 6dvh, 40px);
+  width: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+  filter: drop-shadow(0 2px 8px rgba(150, 100, 255, .25));
+}
+
+/* Mobile-only brand text next to the logo */
+.navbar-brand-text{
+  margin-left: 8px;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: .2px;
+  color: #EEF0FF;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+/* Hide on desktop and up */
+@media (min-width: 769px){
+  .navbar-brand-text{ display: none; }
+}
+
+/* ========================
+   DESKTOP CLUSTER
+   ======================== */
+.auth-desktop { display: inline-flex; align-items: center; gap: clamp(10px, 2.4dvw, 26px); }
+.desktop-spacer { flex: 1; }
+
+/* ========================
+   LINKS
+   ======================== */
+.nav-link {
+  font-family: var(--font-body);
+  color: #ffffff;
+  text-decoration: none;
+  font-size: clamp(14px, 1.9dvh, 18px);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: color .2s ease, opacity .2s ease;
+  opacity: 0.95;
+}
+
+.nav-link:hover { color: #dcb3f2; opacity: 1; }
+
+.nav-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.25),
+              0 0 0 8px rgba(168,61,213,0.45);
+  border-radius: 10px;
+}
+
+.user-displayname .user-text {
+  max-width: 28ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  opacity: .9;
+}
+
+/* ========================
+   COSMIC BUTTON SYSTEM
+   (outline -> fill on hover)
+   ======================== */
+.btn{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  font-family: var(--font-head);
+  font-weight: 700;
+  letter-spacing: .2px;
+  font-size: clamp(14px, 2dvh, 17px);
+
+  padding: clamp(10px, 1.6dvh, 14px) clamp(16px, 2.6dvh, 22px);
+  border-radius: var(--radius-sm);
+  border: 1.5px solid transparent;
+
+  background: transparent;
+  color: #ffffff;
+
+  min-height: 40px;
+  cursor: pointer;
+
+  transition: transform .16s ease,
+              box-shadow .16s ease,
+              background .16s ease,
+              color .16s ease;
+}
+
+.btn:active { transform: translateY(0); }
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px #ffffff40,
+              0 0 0 6px #b06cff66;
+  border-radius: calc(var(--radius-sm) + 2px);
+}
+
+.btn-block { width: 100%; justify-content: center; }
+
+/* Primary (violet/magenta) */
+.btn-primary{
+  position: relative;
+  isolation: isolate;
+}
+.btn-primary::before{
+  content:"";
+  position:absolute; inset:0;
+  border-radius: inherit; padding:2px;
+  background: linear-gradient(90deg, var(--cosmic-g1), var(--cosmic-g2));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude; /* gradient border */
+  z-index:-1;
+}
+.btn-primary:hover{
+  background: linear-gradient(90deg, var(--cosmic-g1), var(--cosmic-g2));
+  box-shadow: 0 10px 24px rgba(120, 80, 255, .35);
+}
+
+/* Danger (pink/magenta) */
+.btn-danger{
+  position: relative;
+  isolation: isolate;
+}
+.btn-danger::before{
+  content:"";
+  position:absolute; inset:0;
+  border-radius: inherit; padding:2px;
+  background: linear-gradient(90deg, var(--cosmic-r1), var(--cosmic-r2));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  z-index:-1;
+}
+.btn-danger:hover{
+  background: linear-gradient(90deg, var(--cosmic-r1), var(--cosmic-r2));
+  box-shadow: 0 10px 22px rgba(255, 106, 190, .30);
+}
+
+/* Optional subtle glass button */
+.btn-ghost{
+  background: rgba(255,255,255,.06);
+  border: 1px solid #ffffff22;
+}
+.btn-ghost:hover{ background: rgba(255,255,255,.12); }
+
+/* ========================
+   HAMBURGER
+   ======================== */
+.hamburger {
+  display: none;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid #ffffff22;
+  border-radius: 12px;
+  font-size: 1.45rem;
+  color: #f5ebff;
+  cursor: pointer;
+  padding: 8px 10px;
+  line-height: 0;
+  transition: transform .14s ease, background .14s ease, border-color .14s ease;
+}
+
+.hamburger:hover {
+  background: rgba(255,255,255,0.12);
+  border-color:#ffffff44;
+  transform: translateY(-1px);
+}
+
+.hamburger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.25),
+              0 0 0 8px rgba(168,61,213,0.45);
+}
+
+/* ========================
+   MOBILE OVERLAY + DRAWER
+   ======================== */
+.nav-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: fadeIn .15s ease-out both;
+}
+@keyframes fadeIn { 0%{opacity:0} 100%{opacity:1} }
+
+.mobile-drawer {
+  position: fixed;
+  top: var(--nav-h);   /* <— align with fixed navbar height */
+  right: 0;
+
+  z-index: 10001;      /* above nav contents */
+  width: min(280px, 82vw);
+  max-height: calc(100dvh - var(--nav-h) - 12px);
+  overflow: auto;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  padding: 16px 14px;
+  border-radius: 14px 0 0 14px;
+
+  background: #121212ee;
+  border: 1px solid #ffffff1a;
+  box-shadow: var(--shadow-md);
+
+  transform: translateX(100%);
+  opacity: 0;
+  transition: transform .25s ease, opacity .25s ease;
+}
+.mobile-drawer.open { transform: translateX(0); opacity: 1; }
+
+.drawer-section { display: flex; flex-direction: column; gap: 12px; }
+
+@media (max-width: 420px) {
+  .mobile-drawer { width: min(250px, 86vw); }
+}
+
+/* ========================
+   RESPONSIVE
+   ======================== */
+@media (max-width: 768px) {
+  .auth-desktop { display: none; }
+  .desktop-spacer { display: none; }     /* ensure space doesn’t push the hamburger */
+  .hamburger { display: inline-flex; margin-left: auto; } /* hamburger on the RIGHT */
+}
+
+@media (min-width: 1024px){
+  .auth-desktop { display: inline-flex; }
+}
+
+/* ========================
+   REDUCED MOTION
+   ======================== */
+@media (prefers-reduced-motion: reduce) {
+  .mobile-drawer, .hamburger, .btn { transition: none !important; }
+}
+
+/* ========================
+   PLAN CHIP (plan + credits)
+   ======================== */
+.plan-chip{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: .2px;
+  color: #fff;
+  background: rgba(255,255,255,.06);
+  border: 1px solid #ffffff22;
+  box-shadow: 0 6px 18px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease, background .14s ease;
+}
+.plan-chip:hover{
+  transform: translateY(-1px);
+  border-color: #ffffff40;
+  background: rgba(255,255,255,.10);
+}
+.plan-chip .plan-dot{
+  width: 8px; height: 8px; border-radius: 999px; display:inline-block;
+  background: var(--cosmic-g1);
+  box-shadow: 0 0 12px rgba(165,92,255,.55);
+}
+.plan-chip .sep{ opacity: .65 }
+.plan-chip .cr{ opacity: .9; font-weight: 800; }
+
+/* Variant accents */
+.plan-basic .plan-dot{ background: #b2b2b2; box-shadow: 0 0 10px #b2b2b244; }
+.plan-pro .plan-dot{ background: var(--cosmic-g1); }
+.plan-premium .plan-dot{ background: #2aa4c7; box-shadow: 0 0 12px rgba(42,164,199,.55); }
+
+.plan-inline{ margin-right: 10px; }
+.mobile-drawer .plan-chip{ margin-bottom: 6px; }
+
+/* ========================
+   REFILL COUNTDOWN BADGE
+   ======================== */
+.refill-badge{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: .2px;
+  color: #fff;
+  background: rgba(255,255,255,.06);
+  border: 1px solid #ffffff22;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.refill-badge .refill-text{ opacity: .9; }
+.refill-soon{
+  background: rgba(255, 106, 190, .12);
+  border-color: rgba(255, 106, 190, .35);
+  box-shadow: 0 0 0 1px rgba(255, 106, 190, .15), inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+/* =======================================================================
+   CENTER THE FOUR PAGE LINKS ON DESKTOP (logo left, auth/hamburger untouched)
+   ======================================================================= */
+.primary-links{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%); /* perfectly center in navbar */
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(12px, 2vw, 28px);
+  white-space: nowrap;
+  z-index: 2;
+  pointer-events: auto;
+}
+.primary-links a{
+  font-family: var(--font-body);
+  color: #ffffff;
+  text-decoration: none;
+  font-size: clamp(14px, 1.9dvh, 18px);
+  opacity: .95;
+  padding: 8px 0;
+  transition: color .2s ease, opacity .2s ease;
+}
+.primary-links a:hover{ color:#dcb3f2; opacity:1; }
+.primary-links a:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.25),
+              0 0 0 8px rgba(168,61,213,0.45);
+  border-radius: 10px;
+}
+/* hide centered links on smaller screens; they live in the drawer on mobile */
+@media (max-width: 1024px){
+  .primary-links{ display: none; }
+}
+
+/* Remove global nav offset on pages without a navbar */
+body.no-nav { padding-top: 0 !important; }
+
+
+/* perf-low blur reduction */
+@media (max-width: 768px) {
+.custom-navbar { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(7,2,14,0.9) !important; }
+}

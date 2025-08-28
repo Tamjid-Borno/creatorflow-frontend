@@ -1,0 +1,83 @@
+/* index.css or App.css */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root { height: 100%; }
+body { background: transparent; color: #EEF0FF; }
+
+
+body {
+  /* Use gradient background with full rgb strings */
+  background: linear-gradient(
+    to bottom right,
+    var(--gradient-background-start),
+    var(--gradient-background-end)
+  );
+  min-height: 100vh;
+  margin: 0;
+}
+
+/* Optional: gradient-overlay div for animation */
+
+
+
+@layer utilities {
+  @keyframes moveHorizontal {
+    0% {
+      transform: translateX(-50%) translateY(-10%);
+    }
+    50% {
+      transform: translateX(50%) translateY(10%);
+    }
+    100% {
+      transform: translateX(-50%) translateY(-10%);
+    }
+  }
+
+  @keyframes moveInCircle {
+    0% {
+      transform: rotate(0deg);
+    }
+    50% {
+      transform: rotate(180deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes moveVertical {
+    0% {
+      transform: translateY(-50%);
+    }
+    50% {
+      transform: translateY(50%);
+    }
+    100% {
+      transform: translateY(-50%);
+    }
+  }
+
+  .animate-first {
+    animation: moveVertical 30s ease infinite;
+  }
+
+  .animate-second {
+    animation: moveInCircle 20s reverse infinite;
+  }
+
+  .animate-third {
+    animation: moveInCircle 40s linear infinite;
+  }
+
+  .animate-fourth {
+    animation: moveHorizontal 40s ease infinite;
+  }
+
+  .animate-fifth {
+    animation: moveInCircle 20s ease infinite;
+  }
+}

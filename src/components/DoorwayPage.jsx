@@ -1,0 +1,308 @@
+// src/components/DoorwayPage.jsx
+import React, { useEffect, useRef, useState } from "react";
+import { FaCopy } from "react-icons/fa";
+import { useNavigate, useLocation } from "react-router-dom";
+import { auth, db } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { IoArrowBackCircle } from "react-icons/io5";
+import ReactMarkdown from "react-markdown";
+import "./DoorwayPage.css";
+import logo from "../logo.png";
+
+function DoorwayPage() {
+  const [user, setUser] = useState(null);
+  const [credits, setCredits] = useState(null);
+  const [creditDepletedAt, setCreditDepletedAt] = useState(null);
+  const [generatedText, setGeneratedText] = useState("");
+  const [isThinking, setIsThinking] = useState(true);
+  const [isFirstRender, setIsFirstRender] = useState(true);
+
+  const interactiveRef = useRef(null);
+  const preRef = useRef(null);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { niche, subCategory, followerCount, tone, moreSpecific } = location.state || {};
+
+  // Normalize + make sections into separate Markdown paragraphs
+  const cleanScript = (text) => {
+    if (!text) return "";
+    return String(text)
+      .replace(/\r\n?/g, "\n")
+      // normalize labels (and common typo)
+      .replace(/^\s*hok\s*:/gim, "Hook:")
+      .replace(/^\s*hook\s*:/gim, "Hook:")
+      .replace(/^\s*body\s*:/gim, "Body:")
+      .replace(/^\s*cta\s*:/gim, "CTA:")
+      // ensure paragraph breaks and visual labels
+      .replace(/\s*Hook:/gi, "\n\n**Hook:**")
+      .replace(/\s*Body:/gi, "\n\n**Body:**")
+      .replace(/\s*CTA:/gi, "\n\n**CTA:**")
+      // collapse 3+ newlines to exactly two
+      .replace(/\n{3,}/g, "\n\n")
+      // trim trailing junk
+      .replace(/(?:\s*\bundefined\b\s*)+$/i, "")
+      .trim();
+  };
+
+  // auth + initial user doc
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      if (!currentUser) return;
+
+      try {
+        await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/refresh-credits/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ uid: currentUser.uid, email: currentUser.email }),
+        });
+      } catch {
+        /* ignore refresh errors here */
+      }
+
+      const snap = await getDoc(doc(db, "users", currentUser.uid));
+      if (snap.exists()) {
+        const data = snap.data();
+        setCredits(data.credits ?? 0);
+        setCreditDepletedAt(data.creditDepletedAt ?? null);
+      } else {
+        setCredits(0);
+        setCreditDepletedAt(null);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  // gooey bg
+  useEffect(() => {
+    const node = interactiveRef.current;
+    if (!node) return;
+
+    let curX = 0, curY = 0, tgX = 0, tgY = 0, raf;
+    const move = () => {
+      curX += (tgX - curX) / 20;
+      curY += (tgY - curY) / 20;
+      node.style.transform = `translate(${Math.round(curX)}px, ${Math.round(curY)}px)`;
+      raf = requestAnimationFrame(move);
+    };
+    const onMouseMove = (e) => { tgX = e.clientX; tgY = e.clientY; };
+
+    window.addEventListener("mousemove", onMouseMove);
+    move();
+
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  const fetchChatGPT = async () => {
+    if (!user) return;
+
+    try {
+      await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/refresh-credits/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uid: user.uid, email: user.email }),
+      });
+    } catch {/* ignore */}
+
+    const userRef = doc(db, "users", user.uid);
+    const freshSnap = await getDoc(userRef);
+    const d = freshSnap.exists() ? freshSnap.data() : {};
+    const effectiveCredits = d.credits ?? 0;
+    const effectiveCreditDepletedAt = d.creditDepletedAt ?? null;
+
+    setCredits(effectiveCredits);
+    setCreditDepletedAt(effectiveCreditDepletedAt);
+
+    if (effectiveCredits < 10) {
+      alert("❌ Not enough credits. Please upgrade your plan or wait for reset.");
+      return;
+    }
+
+    setGeneratedText("");
+    setIsThinking(true);
+
+    try {
+      const resp = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/generate-review/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          niche,
+          subCategory,
+          followerCount,
+          tone,
+          moreSpecific: moreSpecific?.trim() || "",
+        }),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.text();
+        console.error("Backend error:", err);
+        setGeneratedText("Error: " + resp.statusText);
+        setIsThinking(false);
+        return;
+      }
+
+      const data = await resp.json();
+      const fullText = cleanScript(data.response || "Error: No response from backend.");
+
+      // Typewriter effect
+      let i = 0;
+      const interval = setInterval(() => {
+        const ch = fullText[i];
+        if (ch !== undefined) setGeneratedText((prev) => prev + ch);
+        i += 1;
+        if (i >= fullText.length) {
+          clearInterval(interval);
+          setGeneratedText((prev) => cleanScript(prev)); // final tidy
+          setIsThinking(false);
+        }
+      }, 20);
+
+      // credit update
+      const newCredits = Math.max(0, effectiveCredits - 10);
+      const update = { credits: newCredits };
+      if (!effectiveCreditDepletedAt && newCredits === 0) {
+        update.creditDepletedAt = serverTimestamp();
+      }
+      await updateDoc(userRef, update);
+      setCredits(newCredits);
+      if (!effectiveCreditDepletedAt && newCredits === 0) {
+        setCreditDepletedAt("just-stamped");
+      }
+    } catch (e) {
+      setGeneratedText("Error: " + e.message);
+      setIsThinking(false);
+    }
+  };
+
+  // auto-generate once after credits load
+  useEffect(() => {
+    if (credits !== null && isFirstRender) {
+      fetchChatGPT();
+      setIsFirstRender(false);
+    }
+  }, [credits, isFirstRender]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleCopyClick = () => {
+    const el = preRef.current;
+    const text = el?.innerText || el?.textContent || "";
+    navigator.clipboard
+      .writeText(text)
+      .then(() => alert("Copied to clipboard!"))
+      .catch((err) => console.error("Failed to copy: ", err));
+  };
+
+  if (!user) {
+    return (
+      <div className="unauth-wrapper">
+        <div>🚫 Access Denied 🚫</div>
+        <div>You must be logged in to view this page.</div>
+        <button onClick={() => navigate("/signup")} className="unauth-btn">
+          Go to Sign Up
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="doorway-wrapper">
+      <div className="gradient-bg">
+        <svg xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="goo">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+              <feColorMatrix
+                in="blur"
+                mode="matrix"
+                values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8"
+                result="goo"
+              />
+              <feBlend in="SourceGraphic" in2="goo" />
+            </filter>
+          </defs>
+        </svg>
+
+        <div className="gradients-container">
+          <div className="g1" />
+          <div className="g2" />
+          <div className="g3" />
+          <div className="g4" />
+          <div className="g5" />
+          <div className="interactive" ref={interactiveRef} />
+        </div>
+      </div>
+
+      <div className="content-wrapper">
+<div className="heading-container">
+  {/* BEFORE:
+  <img src={logo} alt="Logo" className="heading-logo" / loading="lazy" decoding="async">
+  */}
+  <img
+    src={logo}
+    alt="Logo"
+    className="heading-logo"
+    loading="lazy"
+    decoding="async"
+  />
+  <h1>CreatorFlow</h1>
+</div>
+
+        <div className="foreground-card">
+          <h2>Your script:</h2>
+
+          <div className="inside-card markdown-output">
+            {isThinking && (
+              <p className="thinking-indicator">
+                Thinking<span className="dots">...</span>
+              </p>
+            )}
+            {/* Make sure single \n render as visual line breaks too */}
+            <ReactMarkdown>{generatedText || ""}</ReactMarkdown>
+            <pre ref={preRef} style={{ display: "none" }}>{generatedText}</pre>
+          </div>
+
+          <div className="buttons-wrapper">
+            <div className="buttons">
+              <button
+                className="generate-btn"
+                onClick={fetchChatGPT}
+                disabled={credits === null || credits < 10 || isThinking}
+              >
+                {isThinking ? "Generating..." : "Generate again"}
+              </button>
+
+              <button className="prompt-btn" onClick={() => navigate("/target")}>
+                New prompt
+              </button>
+
+              <div className="back-btn-wrapper">
+                <button className="back-btn" onClick={() => navigate("/target")} aria-label="Back">
+                  <IoArrowBackCircle size={24} />
+                </button>
+                <span className="tooltip">Back</span>
+              </div>
+
+              <div className="credit-box">
+                <span className="credit-label">💎</span>
+                <span className="credit-value">
+                  {credits !== null ? `${credits} credits left` : "Loading..."}
+                </span>
+              </div>
+
+              <button className="copy-btn" aria-label="Copy" onClick={handleCopyClick}>
+                <FaCopy />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default DoorwayPage;

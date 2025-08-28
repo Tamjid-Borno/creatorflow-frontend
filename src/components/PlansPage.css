@@ -1,0 +1,324 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Sora:wght@600;700;800&display=swap');
+
+/* =========================
+   Theming (scoped)
+   ========================= */
+.cf-plans{
+  --bg1:#0b0114; --bg2:#1a0f27;
+  --ink:#eef0ff; --muted:#cbd0dd;
+
+  --card: rgba(255,255,255,.06);
+  --card-border: rgba(255,255,255,.12);
+  --blur: 14px;
+
+  --accent: #8b6ef6;
+  --accent2:#ff66c4;
+
+  --radius: 18px;
+  --radius-sm: 12px;
+
+  --font-head: "Sora", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+
+  /* unified page gutter (used on mobile too) */
+  --page-gutter: max(16px, 4vw);
+
+  position: relative;
+  min-height: 100dvh;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+
+  /* align with safe areas and avoid left/right bias on phones */
+  padding: calc(env(safe-area-inset-top, 0px) + clamp(24px, 4dvw, 48px))
+           var(--page-gutter)
+           calc(env(safe-area-inset-bottom, 0px) + 72px);
+
+  color: var(--ink);
+  background:
+    radial-gradient(1200px 700px at 12% -20%, #a83dd515 0%, transparent 60%),
+    radial-gradient(1200px 700px at 88% 120%, #5d3dd515 0%, transparent 60%),
+    linear-gradient(180deg, var(--bg1), var(--bg2));
+
+  overflow-x: hidden; /* prevent accidental horizontal scroll from big radial gradients */
+}
+
+.cf-plans__stars{
+  position:absolute; inset:0; pointer-events:none; opacity:.35;
+  background:
+    radial-gradient(2px 2px at 20% 30%, #ffffff35 0 40%, transparent 41%) repeat,
+    radial-gradient(2px 2px at 70% 60%, #ffffff25 0 40%, transparent 41%) repeat;
+  background-size: 1600px 900px;
+}
+
+/* =========================
+   Title
+   ========================= */
+.cf-plans__title{
+  font-family: var(--font-head);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  font-size: clamp(26px, 4.6dvw, 44px);
+  margin: 8px 0 6px;
+  text-align:center;
+}
+.cf-plans__subtitle{
+  color:var(--muted);
+  font-family: var(--font-body);
+  text-align:center;
+  margin: 0 0 18px;
+  max-width: 60ch;
+}
+
+/* =========================
+   Grid
+   ========================= */
+.cf-plans__grid{
+  display:grid;
+
+  /* Use percentage width so it respects parent padding; center with margin */
+  width: min(1120px, 100%);
+  margin-inline: auto;
+
+  /* desktop: 3 columns */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 22px;
+  align-items: stretch;
+}
+
+/* Tablet / mobile: single column, centered and aligned to page gutters */
+@media (max-width: 980px){
+  .cf-plans{ justify-items: stretch; } /* let grid fill available width */
+  .cf-plans__grid{
+    grid-template-columns: 1fr;
+    width: 100%;
+    max-width: 640px;
+    gap: 16px;
+  }
+}
+
+/* =========================
+   Card
+   ========================= */
+.cf-plan{
+  position:relative;
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  background: var(--card);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+  box-shadow: 0 22px 60px rgba(0,0,0,.45);
+  padding: 18px 18px 20px;
+  display:flex;
+  flex-direction:column;
+  gap: 12px;
+  transition: border-color .18s ease, transform .18s ease;
+}
+.cf-plan:hover{ border-color: rgba(255,255,255,.18); transform: translateY(-1px); }
+
+/* "Most popular" ribbon */
+.cf-plan__flag{
+  position:absolute; top:8px; right:8px;
+  padding:6px 10px; border-radius:999px;
+  background: rgba(139,110,246,.18);
+  color:#cfc7ff; font-family:var(--font-body); font-weight:700; font-size:.85rem;
+  border:1px solid rgba(139,110,246,.25);
+}
+
+/* Name row + chip */
+.cf-plan__nameRow{ display:flex; align-items:center; gap:10px; }
+.cf-plan__name{
+  font-family: var(--font-head);
+  font-weight: 800;
+  letter-spacing: -.01em;
+  font-size: clamp(18px, 2.4dvw, 22px);
+  margin:0;
+}
+.cf-plan__chip{
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: .8rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: #dcd7ff;
+  background: rgba(139,110,246,.16);
+  border:1px solid rgba(139,110,246,.28);
+}
+
+/* Price — baseline aligned */
+.cf-plan__price{
+  display:flex; align-items: baseline; gap:6px;
+  font-family: var(--font-head);
+  margin-top: 2px;
+}
+.cf-plan__currency{ font-size: .9em; opacity: .9; }
+.cf-plan__amount{ font-size: clamp(28px, 4.2dvw, 32px); line-height:1; font-weight:800; }
+.cf-plan__per{ font-size: .95rem; line-height:1; opacity: .7; }
+
+/* Features */
+.cf-plan__features{
+  list-style:none; padding: 6px 0 0; margin:0;
+  display:flex; flex-direction:column; gap:10px;
+  font-family: var(--font-body);
+  line-height: 1.35;
+}
+.cf-plan__features li{ display:flex; align-items:center; gap:10px; }
+.cf-plan__features .dot{
+  width:10px; height:10px; border-radius:50%;
+  box-shadow: 0 0 12px currentColor;
+}
+.cf-plan__features li.good .dot{ color:#58f07a; background:#58f07a; }
+.cf-plan__features li.bad  .dot{ color:#ff6b6b; background:#ff6b6b; }
+
+/* CTA */
+.cf-plan__cta{
+  margin-top:auto;
+  align-self:flex-start;
+  border-radius: 999px;
+  border:1px solid rgba(255,255,255,.16);
+  padding: 12px 18px;
+  font-family: var(--font-head);
+  font-weight: 800;
+  color:#e9eaff;
+  background: rgba(255,255,255,.06);
+  transition: transform .15s ease, box-shadow .15s ease, background .2s ease;
+}
+.cf-plan__cta:hover{ background: rgba(255,255,255,.1); transform: translateY(-1px); }
+
+.cf-plan__cta--grad{
+  border:0;
+  color:#fff;
+  background: linear-gradient(135deg, var(--accent2) 0%, var(--accent) 100%);
+  box-shadow: 0 14px 34px rgba(139,110,246,.35);
+}
+.cf-plan__cta--grad:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 18px 42px rgba(139,110,246,.45);
+}
+
+.cf-plan__cta:disabled{
+  opacity:.55; cursor:not-allowed; transform:none;
+  box-shadow:none; background:rgba(255,255,255,.08);
+}
+
+/* Pro highlight */
+.cf-plan--pro{
+  outline: 1px solid rgba(139,110,246,.25);
+  box-shadow:
+    0 22px 60px rgba(0,0,0,.45),
+    0 0 0 1px rgba(139,110,246,.18) inset;
+}
+.cf-plan--pro::after{
+  content:"";
+  position:absolute; inset:-10px;
+  margin-top:60px; height:58%;
+  background: radial-gradient(closest-side, rgba(139,110,246,.22), transparent 65%);
+  filter: blur(28px);
+  z-index:-1;
+}
+
+/* Equal-ish card heights on desktop */
+@media (min-width: 981px){
+  .cf-plan{ min-height: 450px; }
+}
+
+/* Tighten small screens + make CTAs full-width and centered */
+@media (max-width: 980px){
+  .cf-plan{ padding: 16px 14px 18px; }
+  .cf-plan__cta{
+    align-self: stretch;        /* full-width CTA looks better on phones */
+    text-align: center;
+    padding: 14px 18px;
+  }
+}
+
+/* Micro phones */
+@media (max-width: 420px){
+  .cf-plans__subtitle{ font-size: 14px; }
+  .cf-plan__features{ gap: 8px; }
+  .cf-plan__cta{ padding: 12px 16px; }
+}
+
+@media (max-width: 360px){
+  .cf-plans__title{ font-size: 22px; }
+  .cf-plan{ padding: 14px; }
+  .cf-plan__cta{ min-width: auto; padding: 10px 14px; }
+}
+
+/* Pending chip */
+.cf-plan__chip--pending{
+  background: rgba(255, 188, 87, .12);
+  border-color: rgba(255, 188, 87, .35);
+  color: #ffd28a;
+}
+
+/* Footer note */
+.cf-plans__note{
+  margin: 10px auto 0;
+  max-width: 900px;
+  text-align: center;
+  color: #e9e1ffb0;
+  font-size: 13px;
+}
+
+/* Backdrop-blur fallback (older Android webviews, etc.) */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .cf-plan{ background: rgba(255,255,255,.10); }
+}
+
+/* Back button (sticky/fixed, safe-area aware) */
+.cf-plans__back{
+  position: fixed;
+  left: calc(var(--page-gutter));
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  z-index: 5;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  color: #fff;
+
+  font-family: var(--font-head);
+  font-weight: 800;
+  letter-spacing: .2px;
+
+  box-shadow: 0 10px 24px rgba(0,0,0,.28);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  transition: transform .14s ease, background .14s ease, border-color .14s ease, box-shadow .14s ease;
+}
+.cf-plans__back:hover{
+  background: rgba(255,255,255,.12);
+  border-color: rgba(255,255,255,.28);
+  transform: translateY(-1px);
+}
+.cf-plans__back:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(255,255,255,.25), 0 0 0 8px rgba(139,110,246,.45);
+}
+.cf-plans__back ion-icon{ font-size: 18px; }
+
+/* keep it from covering CTAs on ultra-small phones */
+@media (max-width: 360px){
+  .cf-plans__back{ bottom: calc(10px + env(safe-area-inset-bottom, 0px)); padding: 8px 12px; }
+}
+
+/* if you prefer it near the title on large screens: */
+@media (min-width: 981px){
+  .cf-plans__back{
+    top: 18px;
+    bottom: auto;
+  }
+}
+
+/* Reduced motion: no micro-animations */
+@media (prefers-reduced-motion: reduce){
+  .cf-plans__back{ transition: none !important; }
+}

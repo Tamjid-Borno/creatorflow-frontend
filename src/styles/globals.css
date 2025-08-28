@@ -1,0 +1,164 @@
+/* =========================
+   Global (no Tailwind)
+   ========================= */
+*,*::before,*::after{box-sizing:border-box}
+html,body,#root{height:100%}
+body{margin:0;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;color:var(--foreground)}
+
+/* ----- Keyframes you already used ----- */
+@keyframes moveHorizontal{0%{transform:translateX(-50%) translateY(-10%)}50%{transform:translateX(50%) translateY(10%)}100%{transform:translateX(-50%) translateY(-10%)}}
+@keyframes moveInCircle{0%{transform:rotate(0)}50%{transform:rotate(180deg)}100%{transform:rotate(360deg)}}
+@keyframes moveVertical{0%{transform:translateY(-50%)}50%{transform:translateY(50%)}100%{transform:translateY(-50%)}}
+
+/* =========================
+   Tokens — HEX fallbacks
+   ========================= */
+:root{
+  --background:#0b0114; --foreground:#eef0ff;
+  --card:#0b0114; --card-foreground:#eef0ff;
+  --popover:#0b0114; --popover-foreground:#eef0ff;
+  --primary:#eef0ff; --primary-foreground:#0b0114;
+  --secondary:#2a2740; --secondary-foreground:#eef0ff;
+  --muted:#2a2740; --muted-foreground:#aeb4c4;
+  --accent:#2a2740; --accent-foreground:#eef0ff;
+  --destructive:#9a2a2a; --destructive-foreground:#ffffff;
+  --border:#2a2740; --input:#2a2740; --ring:#6a6f8f;
+  --chart-1:#8b5cf6; --chart-2:#4f46e5; --chart-3:#22d3ee; --chart-4:#f59e0b; --chart-5:#10b981;
+  --radius:10px;
+
+  /* navbar backdrop (per-skin can override) */
+  --nav-bg: rgba(6, 2, 29, 0.55);
+}
+
+/* OKLCH upgrade when supported (keeps same look, higher fidelity) */
+@supports (color: oklch(0.5 0 0)){
+  :root{
+    --background:oklch(0.145 0 0);
+    --foreground:oklch(0.985 0 0);
+    --card:oklch(0.145 0 0); --card-foreground:oklch(0.985 0 0);
+    --popover:oklch(0.145 0 0); --popover-foreground:oklch(0.985 0 0);
+    --primary:oklch(0.985 0 0); --primary-foreground:oklch(0.205 0 0);
+    --secondary:oklch(0.269 0 0); --secondary-foreground:oklch(0.985 0 0);
+    --muted:oklch(0.269 0 0); --muted-foreground:oklch(0.708 0 0);
+    --accent:oklch(0.269 0 0); --accent-foreground:oklch(0.985 0 0);
+    --destructive:oklch(0.396 0.141 25.723); --destructive-foreground:oklch(0.637 0.237 25.331);
+    --border:oklch(0.269 0 0); --input:oklch(0.269 0 0); --ring:oklch(0.439 0 0);
+  }
+}
+
+/* =========================
+   Base (minimal / neutral)
+   ========================= */
+html, body{
+  background: linear-gradient(#0a0916, #0e0b1f, #0a0916); /* neutral deep */
+  background-attachment: fixed;
+}
+
+/* =========================
+   Page "skins" (per-route)
+   Add/remove classes via RouteSkin.jsx
+   ========================= */
+
+/* HOME (cosmic, starfield, your exact brand stops) */
+body.skin-home{
+  background:
+    radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.08), transparent),
+    radial-gradient(1.5px 1.5px at 75% 10%, rgba(255,255,255,.06), transparent),
+    radial-gradient(1px 1px at 90% 65%, rgba(255,255,255,.05), transparent),
+    linear-gradient(#06021d, #140032, #06021d) !important;
+  background-attachment: fixed,fixed,fixed,fixed;
+  --nav-bg: rgba(6, 2, 29, 0.60);
+}
+
+/* ABOUT (sleek, darker, with a soft vignette) */
+body.skin-about{
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(255,255,255,.06), transparent 60%),
+    radial-gradient(100% 50% at 50% 120%, rgba(0,0,0,.35), transparent 60%),
+    linear-gradient(180deg, #0b0720 0%, #0e0b22 60%, #0b0720 100%) !important;
+  background-attachment: fixed;
+  --nav-bg: rgba(11, 7, 32, 0.60);
+}
+
+/* CONTACT (deep purple/blue diagonal with soft haze) */
+body.skin-contact{
+  background:
+    radial-gradient(80% 50% at 85% 15%, rgba(236,17,251,.06), transparent 60%),
+    radial-gradient(80% 50% at 15% 85%, rgba(106,168,255,.06), transparent 60%),
+    linear-gradient(135deg, #0e0720 0%, #111433 100%) !important;
+  background-attachment: fixed;
+  --nav-bg: rgba(14, 7, 32, 0.58);
+}
+
+/* PRIVACY (clean, professional, very subtle pattern) */
+body.skin-privacy{
+  background:
+    radial-gradient(90% 55% at 50% -10%, rgba(255,255,255,.04), transparent 60%),
+    linear-gradient(180deg, #0c0b18 0%, #101228 100%) !important;
+  background-attachment: fixed;
+  --nav-bg: rgba(12, 11, 24, 0.62);
+}
+
+/* TERMS (slate + vignette, very readable) */
+body.skin-terms{
+  background:
+    radial-gradient(110% 60% at 50% -15%, rgba(255,255,255,.05), transparent 60%),
+    linear-gradient(180deg, #0b0a16 0%, #0f1224 100%) !important;
+  background-attachment: fixed;
+  --nav-bg: rgba(11, 10, 22, 0.62);
+}
+
+/* PLANS (slightly livelier) */
+body.skin-plans{
+  background:
+    radial-gradient(120% 55% at 10% 10%, rgba(255,102,196,.06), transparent 60%),
+    radial-gradient(120% 55% at 90% 15%, rgba(139,110,246,.07), transparent 60%),
+    linear-gradient(180deg, #0b081c 0%, #10102a 100%) !important;
+  background-attachment: fixed;
+  --nav-bg: rgba(11, 8, 28, 0.6);
+}
+
+/* AUTH flows (signup/login) */
+body.skin-auth{
+  background:
+    radial-gradient(120% 55% at 50% -10%, rgba(255,255,255,.05), transparent 60%),
+    linear-gradient(180deg, #0b081c 0%, #0f1126 100%) !important;
+  background-attachment: fixed;
+  --nav-bg: rgba(11, 8, 28, 0.58);
+}
+
+/* APP / TARGET (workspace pages) */
+body.skin-app{
+  background:
+    radial-gradient(120% 55% at 85% 0%, rgba(139,110,246,.06), transparent 60%),
+    radial-gradient(120% 55% at 15% 100%, rgba(106,168,255,.06), transparent 60%),
+    linear-gradient(180deg, #0a0a17 0%, #0f1326 100%) !important;
+  background-attachment: fixed;
+  --nav-bg: rgba(10, 10, 23, 0.60);
+}
+
+/* FALLBACK / OTHER ROUTES */
+body.skin-default{
+  background:
+    radial-gradient(120% 55% at 50% -10%, rgba(255,255,255,.04), transparent 60%),
+    linear-gradient(180deg, #0a0916 0%, #0e0b1f 100%) !important;
+  background-attachment: fixed;
+  --nav-bg: rgba(10, 9, 22, 0.58);
+}
+
+/* ===== Navbar uses per-skin --nav-bg so it blends with each page ===== */
+.custom-navbar{
+  background: var(--nav-bg, rgba(6, 2, 29, 0.55));
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+/* Inputs and outlines still take tokens */
+hr, .bordered { border-color: var(--border); }
+input,textarea,select{
+  background-color: var(--input);
+  color: var(--foreground);
+  border:1px solid var(--border);
+}
+:focus-visible{ outline:2px solid var(--ring); outline-offset:2px; }
