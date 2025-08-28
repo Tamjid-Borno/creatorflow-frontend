@@ -189,6 +189,7 @@ const Navbar = () => {
   // Primary nav links (desktop) — mirrored in the drawer for mobile
   const PrimaryLinks = () => (
     <nav className="primary-links" aria-label="Primary">
+      <button className="nav-link" onClick={() => go('/plans')}>Get credits</button>
       <button className="nav-link" onClick={() => go('/about')}>About</button>
       <button className="nav-link" onClick={() => go('/terms')}>Terms &amp; Conditions</button>
       <button className="nav-link" onClick={() => go('/privacy')}>Privacy Policy</button>
@@ -201,14 +202,12 @@ const Navbar = () => {
       {menuOpen && <div className="nav-backdrop" onClick={closeMenu} aria-hidden="true" />}
 
       <nav className={`custom-navbar ${scrolled ? 'is-scrolled' : ''}`} role="navigation" aria-label="Main">
-        {/* Left: Logo */}
-{/* Left: Logo + Mobile brand text */}
-<button className="navbar-logo" onClick={() => go('/')} aria-label="CreatorFlow home">
-  <img src={logo} alt="CreatorFlow logo" className="logo-img" draggable="false" />
-  {/* 👇 shows ONLY on mobile */}
-  <span className="navbar-brand-text">CreatorFlow</span>
-</button>
-
+        {/* Left: Logo + Mobile brand text */}
+        <button className="navbar-logo" onClick={() => go('/')} aria-label="CreatorFlow home">
+          <img src={logo} alt="CreatorFlow logo" className="logo-img" draggable="false" />
+          {/* 👇 shows ONLY on mobile */}
+          <span className="navbar-brand-text">CreatorFlow</span>
+        </button>
 
         {/* Center: Primary links (desktop only) */}
         <PrimaryLinks />
@@ -261,6 +260,7 @@ const Navbar = () => {
         >
           {/* Primary links (mobile) */}
           <div className="drawer-section">
+            <button className="nav-link" onClick={() => go('/plans')}>Get credits</button>
             <button className="nav-link" onClick={() => go('/about')}>About</button>
             <button className="nav-link" onClick={() => go('/terms')}>Terms &amp; Conditions</button>
             <button className="nav-link" onClick={() => go('/privacy')}>Privacy Policy</button>
