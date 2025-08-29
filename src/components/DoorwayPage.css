@@ -157,7 +157,7 @@
 .inside-card{
   background: transparent; border-radius:10px; width:100%; margin:0 auto;
   min-height: clamp(150px, 26vh, 300px);
-  max-height: clamp(220px, 52vh, 560px); /* desktop default for fixed card */
+  max-height: clamp(220px, 52vh, 560px); /* default for fixed card */
   overflow-y:auto; font-family:"Raleway", sans-serif; color:#F2F4FF;
   font-size:1.04rem; line-height:1.8; padding:1rem 1rem 1.1rem;
   display:flex; flex-direction:column; align-items:flex-start; scroll-behavior:smooth;
@@ -283,3 +283,23 @@
   background:linear-gradient(135deg, #8B6EF6, #6AA8FF);
 }
 .script-box__content{ color:#E9E9FF; font-size:var(--sb-fz); line-height:1.6; word-break:break-word; overflow-wrap:anywhere }
+
+/* ======== DESKTOP BOOST: bigger/taller card ======== */
+@media (min-width: 981px) {
+  /* reserve more room so header never overlaps the fixed card */
+  .content-wrapper{
+    padding-bottom: clamp(300px, 58vh, 820px);
+  }
+
+  /* wider & taller docked card */
+  .foreground-card{
+    width: min(96%, 1240px);
+    padding: 1.3rem 1.2rem;
+    min-height: clamp(320px, 64vh, 860px);
+  }
+
+  /* taller reading window inside the card */
+  .inside-card{
+    max-height: clamp(320px, 62vh, 760px);
+  }
+}
