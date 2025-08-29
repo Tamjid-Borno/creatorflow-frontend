@@ -146,7 +146,10 @@ const Navbar = () => {
     }
   };
 
-  const PlanChip = ({ inline = false }) => {
+  /** Plan chip
+   *  context: "bar" (top navbar) | "drawer" (mobile drawer)
+   */
+  const PlanChip = ({ inline = false, context = 'bar' }) => {
     const hasPlanOrCredits = plan || typeof credits === 'number';
     if (!hasPlanOrCredits) return null;
 
@@ -161,6 +164,35 @@ const Navbar = () => {
     const showCountdown = credits === 0 && countdownMs > 0;
     const cdText = formatCountdown(countdownMs);
 
+    if (context === 'drawer') {
+      // Drawer: stack plan & refill neatly (no awkward line wrap)
+      return (
+        <div className="plan-stack">
+          <span
+            className={`plan-chip ${planClass} plan-full ${inline ? 'plan-inline' : ''}`}
+            title={`${plan ? `${plan} plan` : 'Plan'} · ${crTxt}`}
+            onClick={() => go('/plans', { state: { revisiting: true } })}
+          >
+            <span className="plan-dot" aria-hidden />
+            <strong className="plan-name">{plan || 'Plan'}</strong>
+            <span className="sep">•</span>
+            <span className="cr">{crTxt}</span>
+          </span>
+
+          {showCountdown && (
+            <span
+              className={`refill-badge refill-full ${countdownMs < 3600_000 ? 'refill-soon' : ''}`}
+              title="Auto-refill in 24h from depletion"
+            >
+              <IonIcon icon={timeOutline} aria-hidden="true" />
+              <span className="refill-text">Refills in {cdText}</span>
+            </span>
+          )}
+        </div>
+      );
+    }
+
+    // Top bar version
     return (
       <span
         className={`plan-chip ${planClass} ${inline ? 'plan-inline' : ''}`}
@@ -178,7 +210,6 @@ const Navbar = () => {
             title="Auto-refill in 24h from depletion"
           >
             <IonIcon icon={timeOutline} aria-hidden="true" />
-            {/* Keep text visible on mobile/drawer; CSS will only hide it on mid widths in the top bar */}
             <span className="refill-text">Refills in {cdText}</span>
           </span>
         )}
@@ -210,9 +241,9 @@ const Navbar = () => {
         {/* Center */}
         <PrimaryLinks />
 
-        {/* Right cluster (sticks to far right) */}
+        {/* Right cluster */}
         <div className="auth-desktop">
-          <PlanChip inline />
+          <PlanChip inline context="bar" />
 
           {user ? (
             <>
@@ -237,7 +268,7 @@ const Navbar = () => {
             </button>
           )}
 
-          {/* Hamburger — always last so it pins to the right edge when visible */}
+          {/* Hamburger pinned far right */}
           <button
             className="hamburger"
             onClick={toggleMenu}
@@ -264,7 +295,8 @@ const Navbar = () => {
           </div>
 
           <div className="drawer-section">
-            <PlanChip />
+            {/* Clean stacked presentation in the drawer */}
+            <PlanChip context="drawer" />
           </div>
 
           <div className="drawer-section">
@@ -275,7 +307,8 @@ const Navbar = () => {
                   onClick={() => go('/plans', { state: { revisiting: true } })}
                 >
                   <IonIcon icon={personOutline} aria-hidden="true" />
-                  <span className="user-text">{user.displayName || user.email}</span>
+                  {/* Always show name in drawer */}
+                  <span className="user-text user-text--drawer">{user.displayName || user.email}</span>
                 </button>
 
                 <button className="btn btn-danger btn-block" onClick={handleLogoutClick}>
