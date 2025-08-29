@@ -6,9 +6,6 @@ import {
   collection,
   query,
   orderBy,
-  limit as qLimit,
-  startAfter,
-  getDocs,
   onSnapshot,
   doc,
   deleteDoc,
@@ -73,12 +70,10 @@ export default function Dashboard() {
   const [countdownMs, setCountdownMs] = useState(0);
   const tickRef = useRef(null);
 
-  // scripts pagination
-  const PAGE_SIZE = 12;
+  // scripts (realtime)
   const [scripts, setScripts] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [lastDocSnap, setLastDocSnap] = useState(null);
-  const [hasMore, setHasMore] = useState(true);
+  const [scriptsLoading, setScriptsLoading] = useState(true);
+  const [subKey, setSubKey] = useState(0); // manual "refresh" key
 
   // local filters
   const [search, setSearch] = useState("");
@@ -97,16 +92,16 @@ export default function Dashboard() {
       }
       setUser(u);
 
-      // live user doc
+      // Live user doc (plan/credits)
       const userRef = doc(db, "users", u.uid);
       const offSnap = onSnapshot(userRef, (snap) => {
         if (!snap.exists()) return;
         const data = snap.data() || {};
-        setPlan(
+        const p =
           data.subscriptionPlan && ["Basic", "Pro", "Premium"].includes(data.subscriptionPlan)
             ? data.subscriptionPlan
-            : null
-        );
+            : null;
+        setPlan(p);
         setCredits(typeof data.credits === "number" ? data.credits : null);
         setCreditDepletedAt(toDateMaybe(data.creditDepletedAt));
       });
@@ -133,44 +128,23 @@ export default function Dashboard() {
     };
   }, [credits, creditDepletedAt]);
 
-  // ===== LOAD SCRIPTS (PAGINATED) =====
-  const loadInitial = async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const ref = collection(db, "users", user.uid, "scripts");
-      const q = query(ref, orderBy("createdAt", "desc"), qLimit(PAGE_SIZE));
-      const snap = await getDocs(q);
-
-      const rows = [];
-      snap.forEach((d) => rows.push({ id: d.id, ...d.data() }));
-      setScripts(rows);
-      setHasMore(snap.size === PAGE_SIZE);
-      setLastDocSnap(snap.docs[snap.docs.length - 1] || null);
-    } finally {
-      setLoading(false);
-    }
-  };
-  const loadMore = async () => {
-    if (!user || !hasMore || !lastDocSnap) return;
-    setLoading(true);
-    try {
-      const ref = collection(db, "users", user.uid, "scripts");
-      const q = query(ref, orderBy("createdAt", "desc"), startAfter(lastDocSnap), qLimit(PAGE_SIZE));
-      const snap = await getDocs(q);
-      const rows = [];
-      snap.forEach((d) => rows.push({ id: d.id, ...d.data() }));
-      setScripts((prev) => [...prev, ...rows]);
-      setHasMore(snap.size === PAGE_SIZE);
-      setLastDocSnap(snap.docs[snap.docs.length - 1] || null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // ===== REALTIME SCRIPTS (fixes "need to refresh") =====
   useEffect(() => {
-    if (user) loadInitial();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.uid]);
+    if (!user) return;
+    setScriptsLoading(true);
+    const ref = collection(db, "users", user.uid, "scripts");
+    const q = query(ref, orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setScripts(rows);
+        setScriptsLoading(false);
+      },
+      () => setScriptsLoading(false)
+    );
+    return () => unsub();
+  }, [user?.uid, subKey]);
 
   const filteredScripts = useMemo(() => {
     if (!search.trim()) return scripts;
@@ -185,6 +159,9 @@ export default function Dashboard() {
       return text.includes(q) || meta.includes(q);
     });
   }, [scripts, search]);
+
+  const totalCount = scripts.length;
+  const showingCount = filteredScripts.length;
 
   // ===== ACTIONS =====
   const toast = (msg) => {
@@ -212,7 +189,6 @@ export default function Dashboard() {
     if (!ok) return;
     try {
       await deleteDoc(doc(db, "users", user.uid, "scripts", id));
-      setScripts((prev) => prev.filter((s) => s.id !== id));
       if (viewOpen && viewScript?.id === id) {
         setViewOpen(false);
         setViewScript(null);
@@ -236,6 +212,8 @@ export default function Dashboard() {
     URL.revokeObjectURL(url);
   };
 
+  const refreshScripts = () => setSubKey((k) => k + 1);
+
   // ===== MODAL =====
   const openView = (script) => {
     setViewScript(script);
@@ -245,21 +223,6 @@ export default function Dashboard() {
     setViewOpen(false);
     setViewScript(null);
   };
-
-  // lock scroll + ESC close
-  useEffect(() => {
-    if (!viewOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e) => {
-      if (e.key === "Escape") closeView();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [viewOpen]);
 
   const planHue =
     plan === "Premium" ? "cyan" : plan === "Pro" ? "violet" : "slate";
@@ -277,7 +240,7 @@ export default function Dashboard() {
         </div>
 
         <div className="dash__headActions">
-          <button className="btn btn--ghost" onClick={loadInitial} disabled={loading} title="Refresh">
+          <button className="btn btn--ghost" onClick={refreshScripts} disabled={scriptsLoading} title="Refresh">
             <FiRefreshCcw />
             <span>Refresh</span>
           </button>
@@ -306,7 +269,7 @@ export default function Dashboard() {
                 <span>Refills in {formatCountdown(countdownMs)}</span>
               </span>
             ) : (
-              <span className="kpi__muted">Only auto-refills when balance hits 0</span>
+              <span className="kpi__muted">Auto-refills when balance hits 0</span>
             )}
           </div>
         </article>
@@ -320,7 +283,7 @@ export default function Dashboard() {
         </article>
       </section>
 
-      {/* Search */}
+      {/* Search + Count */}
       <section className="dash__searchRow">
         <div className="search">
           <FiSearch className="search__icon" />
@@ -332,11 +295,16 @@ export default function Dashboard() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+
+        <div className="dash__count" aria-live="polite">
+          <span className="count-pill">{showingCount}</span>
+          <span className="count-text">of {totalCount} scripts</span>
+        </div>
       </section>
 
       {/* Scripts list */}
       <section className="dash__scripts">
-        {loading && scripts.length === 0 ? (
+        {scriptsLoading ? (
           <div className="dash__loading">Loading…</div>
         ) : filteredScripts.length === 0 ? (
           <div className="dash__empty">
@@ -385,14 +353,6 @@ export default function Dashboard() {
                 </article>
               );
             })}
-          </div>
-        )}
-
-        {hasMore && filteredScripts.length === scripts.length && scripts.length > 0 && (
-          <div className="dash__more">
-            <button className="btn btn--ghost" onClick={loadMore} disabled={loading}>
-              {loading ? "Loading…" : "Load more"}
-            </button>
           </div>
         )}
       </section>
