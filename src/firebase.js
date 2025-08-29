@@ -7,20 +7,26 @@ import {
   persistentMultipleTabManager
 } from 'firebase/firestore';
 
+// All values come from env so nothing is hard-coded in the repo.
+// Note: In the browser these values are still visible (normal for Firebase).
 const firebaseConfig = {
-  apiKey: "AIzaSyBFlLxDk6BX7zctqoVA7I0pmBQbDqyXBL0",
-  authDomain: "my-react-ai-app.firebaseapp.com",
-  projectId: "my-react-ai-app",
-  storageBucket: "my-react-ai-app.appspot.com", // ✅ FIXED THIS LINE
-  messagingSenderId: "915226686149",
-  appId: "1:915226686149:web:5be7db855eaa2ff2dd76ac"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
 };
+
+// Optional: warn if something is missing to catch misconfig in CI/Preview
+for (const [k, v] of Object.entries(firebaseConfig)) {
+  if (!v) console.warn(`[Firebase] Missing env var for ${k}`);
+}
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// ✅ Use long polling fallback to fix 'offline' issue
 const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
   cache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
