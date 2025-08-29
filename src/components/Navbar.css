@@ -25,7 +25,6 @@
   --nav-h: clamp(56px, 8dvh, 70px);
 }
 
-/* keep page content below fixed nav */
 body { padding-top: var(--nav-h); }
 
 /* ========================
@@ -85,15 +84,15 @@ body { padding-top: var(--nav-h); }
 }
 @media (min-width: 769px){ .navbar-brand-text{ display: none; } }
 
-/* CENTER — lives in normal flow (no absolute!) */
+/* CENTER (no absolute; shrinks gracefully) */
 .primary-links{
   flex: 1 1 auto;
-  min-width: 0;                 /* allow shrinking */
+  min-width: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: clamp(12px, 2vw, 28px);
-  overflow: hidden;             /* prevents overlap if ultra-tight */
+  overflow: hidden;             /* guards against overlap on ultra-tight widths */
 }
 .nav-link {
   font-family: var(--font-body);
@@ -113,9 +112,10 @@ body { padding-top: var(--nav-h); }
 }
 .nav-link:hover { color: #dcb3f2; opacity: 1; }
 
-/* RIGHT CLUSTER */
+/* RIGHT CLUSTER (sticks to the right edge) */
 .auth-desktop{
   flex: 0 0 auto;
+  margin-left: auto;            /* <- pushes cluster to far right */
   display: inline-flex;
   align-items: center;
   gap: clamp(8px, 1.6vw, 18px);
@@ -160,7 +160,7 @@ body { padding-top: var(--nav-h); }
 .btn-danger:hover{ background: linear-gradient(90deg, var(--cosmic-r1), var(--cosmic-r2)); box-shadow: 0 10px 22px rgba(255, 106, 190, .30); }
 .btn-block{ width: 100%; justify-content: center; }
 
-/* Hamburger (lives at far-right, only below 1200px) */
+/* Hamburger — appears at tablet and down, pinned to far right */
 .hamburger{
   display: none;
   background: rgba(255,255,255,0.06);
@@ -203,29 +203,42 @@ body { padding-top: var(--nav-h); }
    RESPONSIVE COLLISION GUARDS
    ======================== */
 
-/* 1) Tighten center links and hide them entirely on smaller desktops */
+/* Mid-width desktops: compress center, shorten plan chip text in TOP BAR only */
 @media (max-width: 1400px){
   .primary-links{ gap: clamp(8px, 1.4vw, 18px); }
-  .plan-chip .refill-text{ display:none; }         /* shorten countdown text */
+  .custom-navbar .auth-desktop .plan-chip .refill-text{ display:inline; } /* keep text unless really needed */
 }
+
+/* Hide username text a bit earlier to save room */
 @media (max-width: 1300px){
-  .user-displayname .user-text{ display:none; }    /* icon-only username */
+  .user-displayname .user-text{ display:none; }
 }
-@media (max-width: 1260px){
-  .plan-chip .sep, .plan-chip .plan-name{ display:none; } /* show only credits (and dot) */
-  .plan-chip{ padding: 6px 10px; }
+
+/* When space is tight, shorten plan badge label in TOP BAR only
+   (drawer version still shows full text) */
+@media (max-width: 1220px){
+  .custom-navbar .auth-desktop .plan-chip .sep,
+  .custom-navbar .auth-desktop .plan-chip .plan-name{ display:none; }
+  .custom-navbar .auth-desktop .plan-chip{ padding: 6px 10px; }
 }
+
+/* Collapse center links and switch to hamburger around laptop width */
 @media (max-width: 1200px){
-  .primary-links{ display:none; }                  /* collapse to hamburger */
+  .primary-links{ display:none; }
   .hamburger{ display:inline-flex; margin-left: 6px; }
 }
 
-/* 2) Tablet/Mobile: hide right-side cluster; use hamburger + drawer */
-@media (max-width: 768px){
+/* Treat ≤1024px as “mobile-like”: hide right cluster except hamburger */
+@media (max-width: 1024px){
   .auth-desktop > .btn,
   .auth-desktop > .nav-link,
   .auth-desktop > .plan-chip { display: none; }
   .hamburger{ display:inline-flex; margin-left: 8px; }
+}
+
+/* Real mobile: reduce heavy blur for perf */
+@media (max-width: 768px){
+  .custom-navbar{ backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(7,2,14,0.9) !important; }
 }
 
 /* Reduced motion */
@@ -274,8 +287,3 @@ body { padding-top: var(--nav-h); }
 
 /* Remove global nav offset on pages without a navbar */
 body.no-nav { padding-top: 0 !important; }
-
-/* Perf: reduce heavy blur on low widths */
-@media (max-width: 768px){
-  .custom-navbar{ backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(7,2,14,0.9) !important; }
-}
