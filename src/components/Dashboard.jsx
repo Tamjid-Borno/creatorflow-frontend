@@ -361,7 +361,6 @@ export default function Dashboard() {
                     </div>
                   </header>
 
-                  {/* Clicking the preview also opens full view */}
                   <button className="card__body" onClick={() => openView(s)} title="View full">
                     <div className="card__preview">
                       <ReactMarkdown>{String(s.text || "").slice(0, 1200)}</ReactMarkdown>
@@ -389,7 +388,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Pagination */}
         {hasMore && filteredScripts.length === scripts.length && scripts.length > 0 && (
           <div className="dash__more">
             <button className="btn btn--ghost" onClick={loadMore} disabled={loading}>
@@ -407,15 +405,13 @@ export default function Dashboard() {
           aria-modal="true"
           aria-labelledby="dash-modal-title"
           onMouseDown={(e) => {
-            // backdrop close: only when clicking the backdrop, not the dialog
             if (e.target.classList.contains("dash-modal")) closeView();
           }}
         >
           <div className="dash-modal__dialog">
             <header className="dash-modal__head">
-              <h2 id="dash-modal-title" className="dash-modal__title">
-                Full script
-              </h2>
+              <h2 id="dash-modal-title" className="dash-modal__title">Full script</h2>
+
               <div className="dash-modal__meta">
                 {viewScript.niche && <span className="tag">{viewScript.niche}</span>}
                 {viewScript.subCategory && <span className="tag tag--muted">{viewScript.subCategory}</span>}
@@ -426,6 +422,7 @@ export default function Dashboard() {
                   </span>
                 )}
               </div>
+
               <button className="icon-btn" onClick={closeView} aria-label="Close">
                 <FiX />
               </button>
@@ -443,16 +440,15 @@ export default function Dashboard() {
               <button
                 className="btn btn--ghost"
                 onClick={() =>
-                  downloadText(
-                    `script-${viewScript.id || "export"}.txt`,
-                    viewScript.text || ""
-                  )
+                  downloadText(`script-${viewScript.id || "export"}.txt`, viewScript.text || "")
                 }
               >
                 <FiDownload />
                 <span>Download</span>
               </button>
+
               <div className="spacer" />
+
               <button className="btn btn--primary" onClick={closeView}>
                 <FiX />
                 <span>Close</span>
