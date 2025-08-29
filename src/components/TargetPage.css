@@ -1,18 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300..900&family=Sora:wght@600;700;800&display=swap');
 
 /* ================================
-   Target Page — Scoped Styles Only
+   Target Page — Scoped, dark-cosmic
    ================================ */
 
 .target {
-  /* Theme tokens (local) */
-  --bg1: #0b0114;
-  --bg2: #1a0f27;
+  /* palette */
+  --bg1: #06030b;
+  --bg2: #0e0820;
   --ink: #eef0ff;
   --muted: #cbd0dd;
 
-  --card: rgba(255,255,255,0.04);
-  --card-border: rgba(255,255,255,0.12);
+  --card: rgba(255,255,255,0.045);
+  --card-border: rgba(255,255,255,0.10);
   --blur: 14px;
 
   --radius: 18px;
@@ -31,34 +31,37 @@
   padding: clamp(16px, 3dvw, 36px);
   color: var(--ink);
   background:
-    radial-gradient(1000px 600px at 10% -20%, #a83dd515 0%, transparent 60%),
-    radial-gradient(1000px 600px at 90% 120%, #5d3dd515 0%, transparent 60%),
+    radial-gradient(1100px 700px at 12% -25%, rgba(140,110,255,.12) 0%, transparent 65%),
+    radial-gradient(1100px 700px at 88% 125%, rgba(255,102,196,.10) 0%, transparent 65%),
     linear-gradient(180deg, var(--bg1), var(--bg2));
+  overflow-x: hidden;
 }
 
-/* faint starry texture */
+/* subtle starfield + vignette */
 .target__bg {
-  position: absolute; inset: 0;
+  position: absolute; inset: 0; pointer-events: none;
   background:
-    radial-gradient(2px 2px at 20% 30%, #ffffff30 0 40%, transparent 41%) repeat,
-    radial-gradient(2px 2px at 70% 60%, #ffffff25 0 40%, transparent 41%) repeat;
-  background-size: 1600px 900px;
-  opacity: .35;
-  pointer-events: none;
+    radial-gradient(2px 2px at 20% 30%, #ffffff2b 0 40%, transparent 41%) repeat,
+    radial-gradient(2px 2px at 70% 60%, #ffffff22 0 40%, transparent 41%) repeat,
+    radial-gradient(1200px 800px at 50% 30%, transparent 60%, rgba(0,0,0,.35) 100%);
+  background-size: 1600px 900px, 1600px 900px, cover;
+  mix-blend-mode: screen;
+  opacity: .38;
 }
 
 /* ==================
    Card
    ================== */
 .target__card {
-  width: min(1100px, 92vw);
+  width: min(1140px, 94vw);
   border-radius: var(--radius);
   border: 1px solid var(--card-border);
-  background: var(--card);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
   backdrop-filter: blur(var(--blur));
   -webkit-backdrop-filter: blur(var(--blur));
   padding: clamp(18px, 2.2dvw, 26px);
-  box-shadow: 0 22px 70px rgba(0,0,0,.45);
+  box-shadow: 0 22px 70px rgba(0,0,0,.50);
 }
 
 /* Header */
@@ -66,69 +69,62 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: clamp(14px, 1.6dvw, 18px);
   gap: 12px;
+  margin-bottom: 6px; /* reduced gap per your request */
 }
-.target__step {
-  font-family: var(--font-body);
-  font-weight: 700;
-  color: #d9d9e9;
-  opacity: .9;
+.target__title {
+  margin: 0;
+  font-family: var(--font-head);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  font-size: clamp(26px, 4.2dvw, 40px);
+  color: #fff;
 }
+
+/* credits pill */
 .target__credits {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.15);
-  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.07);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
   font-family: var(--font-body);
+  white-space: nowrap;
 }
-.target__creditsDot { width: 8px; height: 8px; border-radius: 50%; background: #8be9a1; }
-.target__creditsLabel { color: #cfd3e4; font-weight: 600; }
-.target__creditsValue { color: #ffffff; font-weight: 800; }
+.target__creditsDot { width: 8px; height: 8px; border-radius: 50%; background: #8be9a1; box-shadow: 0 0 10px #6ddc91aa; }
+.target__creditsLabel { color: #cfd3e4; font-weight: 700; }
+.target__creditsValue { color: #ffffff; font-weight: 900; }
+
+.target__subtitle {
+  margin: 8px 0 14px 0;  /* tighter heading-to-card gap */
+  color: var(--muted);
+  font-family: var(--font-body);
+}
 
 /* ==================
    Card inner grid
    ================== */
 .target__cardInner{
   display: grid;
-  grid-template-columns: 2fr 1fr;     /* balance: form heavier than art */
+  grid-template-columns: 2fr 1fr;
   gap: clamp(16px, 3dvw, 28px);
   align-items: start;
 }
 
 /* LEFT: form column */
-.target__form { min-width: 0; } /* allow inputs to shrink without overflow */
+.target__form { min-width: 0; }
 
-.target__title {
-  margin: 6px 0 8px;
-  font-family: var(--font-head);
-  font-weight: 800;
-  letter-spacing: -0.015em;
-  font-size: clamp(28px, 4.6dvw, 42px);
-}
-.target__subtitle {
-  margin: 0 0 16px 0;
-  color: var(--muted);
-  font-family: var(--font-body);
-}
-
-/* Fields grid (2 columns on desktop) */
+/* Fields grid */
 .target__fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: clamp(12px, 2dvw, 18px);
-  margin-top: 8px;
+  margin-top: 6px;
 }
 .target__label--full { grid-column: 1 / -1; }
-
-@media (max-width: 900px){
-  .target__cardInner{ grid-template-columns: 1fr; }
-  .target__fields { grid-template-columns: 1fr; }
-}
 
 /* Labels */
 .target__label {
@@ -139,7 +135,7 @@
   color: #e9eaff;
 }
 
-/* PrimeReact dropdown — dark skin, scoped */
+/* PrimeReact dropdown — dark skin */
 .target .p-dropdown.target__dd{
   width: 100%;
   border-radius: var(--radius-sm);
@@ -171,18 +167,17 @@
 .target__input::placeholder{ color: #b8bdd1; }
 
 /* ==================
-   Actions (Back + Continue)
+   Actions
    ================== */
 .target__actions{
-  /* Keep buttons on ONE LINE, even on phones */
   display: grid;
-  grid-template-columns: auto 1fr;   /* Back is auto; Continue fills the rest */
+  grid-template-columns: auto 1fr;   /* Back auto; Continue fills */
   align-items: center;
   gap: 12px;
   margin-top: clamp(14px, 2dvw, 18px);
 }
 
-/* —— Buttons base —— */
+/* Buttons base */
 .btn{
   appearance: none;
   border: 0;
@@ -191,17 +186,14 @@
   font-family: var(--font-head);
   font-weight: 800;
   cursor: pointer;
-
-  /* Center the label perfectly */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  text-align: center;
-
-  /* Allow shrinking on tiny screens to prevent wrapping */
-  min-width: 0;
-  white-space: nowrap;
+  display: inline-flex; align-items: center; justify-content: center;
+  line-height: 1; text-align: center;
+  min-width: 0; white-space: nowrap;
+}
+.btn:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 3px #ffffff40, 0 0 0 6px #b06cff66;
+  transition: box-shadow .15s ease;
 }
 
 .btn--ghost{
@@ -211,15 +203,13 @@
 }
 .btn--ghost:hover{ background: rgba(255,255,255,.10); }
 
-/* Continue button takes the free space and centers its text */
+/* Continue expands but remains elegant on mobile */
 .btn--primary{
   background: var(--cta);
   color: #fff;
   box-shadow: 0 14px 34px rgba(139,110,246,.35);
   transition: transform .15s ease, box-shadow .15s ease, background .2s ease;
-
-  /* Let it expand but also shrink when needed */
-  justify-self: stretch;           /* overrides earlier end-alignment */
+  justify-self: stretch;
   min-width: clamp(140px, 44%, 280px);
 }
 .btn--primary:hover{
@@ -237,47 +227,24 @@
   color: #a7acc2;
 }
 
-/* Make sure the two buttons still share a row on small phones */
-@media (max-width: 560px){
-  .target__actions{
-    grid-template-columns: auto 1fr; /* keep two cols (no stacking) */
-    gap: 10px;
-  }
-  .btn{ padding: 12px 14px; }
-  .btn--primary{ min-width: 0; }     /* allow full shrink on narrow screens */
-}
-
-/* Ultra small (≤360px) – split evenly if space is super tight */
-@media (max-width: 360px){
-  .target__actions{ grid-template-columns: 1fr 1fr; }
-  .btn{ padding: 10px 12px; }
-  .btn--primary{ min-width: 0; }
-}
-
-/* ==================
-   RIGHT: Illustration column
-   ================== */
+/* RIGHT: Illustration column */
 .target__artCol{
   display: grid;
-  align-items: end;             /* anchor to baseline of the column */
+  align-items: end;
   min-height: 100%;
 }
-
 .target__artWrap{
-  justify-self: end;            /* tuck to the right */
+  justify-self: end;
   position: relative;
-  width: clamp(240px, 92%, 320px); /* scale up slightly vs previous */
-  transform: translateY(4px);      /* nudge down a touch to align w/ CTA */
+  width: clamp(260px, 96%, 360px); /* a touch larger */
+  transform: translateY(4px);
 }
-
 .target__artImg{
   display: block;
   width: 100%;
   height: auto;
   filter: drop-shadow(0 12px 30px rgba(0,0,0,.45));
 }
-
-/* soft glow behind the art */
 .target__artGlow{
   content:"";
   position: absolute;
@@ -291,12 +258,42 @@
   z-index: -1;
 }
 
-/* Mobile: hide art for breathing room (like mock) */
+/* ==================
+   Responsive
+   ================== */
+@media (max-width: 1024px){
+  .target__card { width: min(980px, 95vw); } /* your 980px target looks/feels great */
+}
 @media (max-width: 900px){
-  .target__artCol{ display: none; }
+  .target__cardInner{ grid-template-columns: 1fr; }
+  .target__fields { grid-template-columns: 1fr; }
+  .target__artCol{ display: none; }         /* more breathing room on phones */
 }
 
-/* Respect reduced motion */
+/* Keep the two buttons on one line on small phones */
+@media (max-width: 560px){
+  .target__actions{
+    position: sticky; bottom: -1px;        /* sticks to bottom of card on scroll */
+    grid-template-columns: auto 1fr;
+    gap: 10px;
+    padding-top: 10px;
+    background: linear-gradient(180deg, transparent, rgba(10,10,18,.55) 45%, rgba(10,10,18,.75));
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-top: 1px solid rgba(255,255,255,.08);
+  }
+  .btn{ padding: 12px 14px; }
+  .btn--primary{ min-width: 0; }
+}
+
+/* Ultra small (≤360px) – split evenly if super tight */
+@media (max-width: 360px){
+  .target__actions{ grid-template-columns: 1fr 1fr; }
+  .btn{ padding: 10px 12px; }
+  .btn--primary{ min-width: 0; }
+}
+
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce){
   .btn--primary{ transition: none !important; }
 }
