@@ -2,13 +2,24 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-// same keys your PlansPage uses
+// Local storage keys (keep consistent with PlansPage)
 const CONFIRMED_KEY = "cf_selected_plan_confirmed";
-const PENDING_KEY = "cf_pending_plan";
+const PENDING_KEY   = "cf_pending_plan";
+const OWNER_KEY     = "cf_plan_owner_uid";
 
-// CRA env var for your backend base URL (set on host):
-// REACT_APP_API_BASE_URL=
+// Backend base URL (CRA env var)
+// REACT_APP_API_BASE_URL=https://your-backend.example.com
 const API_BASE = (process.env.REACT_APP_API_BASE_URL || "").replace(/\/+$/, "");
+
+const VALID_PLANS = ["Basic", "Pro", "Premium"];
+const isValidPlan = (p) => VALID_PLANS.includes(p);
+
+function normalizePlan(p) {
+  const s = String(p || "").trim();
+  if (!s) return null;
+  const cap = s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+  return isValidPlan(cap) ? cap : null;
+}
 
 function safeAtob(str) {
   try {
@@ -26,15 +37,14 @@ export default function SuccessPage() {
   const [status, setStatus] = useState("processing"); // processing | done | skipped
 
   const qp = useMemo(() => new URLSearchParams(search), [search]);
-  const customerEmail = qp.get("customer_email") || "";
-  const passthroughRaw = qp.get("passthrough") || "";
-  const transactionId = qp.get("transaction_id") || qp.get("ptxn") || "";
-  const paddleCustomerId = qp.get("paddle_customer_id") || "";
+  const customerEmail   = qp.get("customer_email") || "";
+  const passthroughRaw  = qp.get("passthrough") || "";
+  const transactionId   = qp.get("transaction_id") || qp.get("ptxn") || "";
+  const paddleCustomerId= qp.get("paddle_customer_id") || "";
 
-  // Try decode passthrough -> { uid, plan, email?, source? }
+  // Decode passthrough -> { uid, plan, email?, source? }
   const passthrough = useMemo(() => {
     if (!passthroughRaw) return {};
-    // attempt base64(JSON), then JSON string
     const try1 = safeAtob(passthroughRaw);
     try {
       return JSON.parse(try1);
@@ -47,53 +57,58 @@ export default function SuccessPage() {
     }
   }, [passthroughRaw]);
 
-  // inside useEffect that already runs on success page:
   useEffect(() => {
-    const plan = (passthrough.plan || "").trim();
-    const uid  = (passthrough.uid  || "").trim();
-    const emailFromPt = (passthrough.email || "").trim();
+    const plan = normalizePlan(passthrough.plan);
+    const uid  = String(passthrough.uid || "").trim();
+    const emailFromPt = String(passthrough.email || "").trim();
     const email = customerEmail || emailFromPt || "";
 
+    // If no valid plan, nothing to do
     if (!plan) { setStatus("skipped"); return; }
 
-    // 1) confirm locally
+    // 1) Confirm locally (scoped to the checkout owner UID)
     try {
+      if (uid) localStorage.setItem(OWNER_KEY, uid);
       localStorage.setItem(CONFIRMED_KEY, plan);
       localStorage.removeItem(PENDING_KEY);
-      window.dispatchEvent(new StorageEvent("storage", { key: CONFIRMED_KEY }));
+
+      // Nudge other tabs to refresh their view
+      try { window.dispatchEvent(new StorageEvent("storage", { key: OWNER_KEY })); } catch {}
+      try { window.dispatchEvent(new StorageEvent("storage", { key: CONFIRMED_KEY })); } catch {}
+      try { window.dispatchEvent(new StorageEvent("storage", { key: PENDING_KEY })); } catch {}
     } catch {}
 
-    // 2) notify backend to update Firestore
+    // 2) Notify backend to update Firestore (source of truth)
     (async () => {
       try {
         if (!API_BASE) {
-          // if not set in hosting, don't break the page — just finish locally
           console.warn("REACT_APP_API_BASE_URL is not set; skipping backend finalize.");
         } else {
           await fetch(`${API_BASE}/api/finalize-checkout/`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            // If you later need cookies/CSRF: credentials: "include",
             body: JSON.stringify({
               uid,
               email,
               plan,
-              transaction_id: transactionId || ""
+              transaction_id: transactionId || "",
+              paddle_customer_id: paddleCustomerId || ""
             }),
           });
         }
-      } catch (_) {
-        // non-fatal in dev; UI already updated locally
+      } catch (err) {
+        // Non-fatal; local UI already updated
+        console.warn("finalize-checkout failed:", err);
       } finally {
         setStatus("done");
       }
     })();
-  }, [passthrough, customerEmail, transactionId]);
+  }, [passthrough, customerEmail, transactionId, paddleCustomerId]);
 
-  const goHome = () => navigate("/");
+  const goHome  = () => navigate("/");
   const goPlans = () => navigate("/plans", { replace: true });
 
-  const planPretty = (passthrough.plan || "").replace(/^\w/, c => c.toUpperCase());
+  const planPretty = normalizePlan(passthrough.plan) || "";
 
   return (
     <main style={{minHeight: "70vh", display: "grid", placeItems: "center", padding: 24}}>
@@ -147,19 +162,15 @@ export default function SuccessPage() {
           )}
           {!planPretty && (
             <div style={{opacity:.85}}>
-              <em>No plan found in URL. If this is unexpected, ensure you appended
-              <code> customer_email</code> and a base64 <code>passthrough</code> to the hosted checkout link.</em>
+              <em>No plan found in URL. Ensure your hosted checkout appends
+              <code> customer_email</code> and a base64 <code>passthrough</code>.</em>
             </div>
           )}
         </div>
 
         <div style={{display:"flex", gap:12, marginTop: 22, flexWrap:"wrap"}}>
-          <button onClick={goHome} style={btn()}>
-            Go to Home
-          </button>
-          <button onClick={goPlans} style={btn(true)}>
-            Manage Plans
-          </button>
+          <button onClick={goHome}  style={btn()}>Go to Home</button>
+          <button onClick={goPlans} style={btn(true)}>Manage Plans</button>
         </div>
 
         {status === "processing" && (
