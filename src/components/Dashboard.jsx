@@ -60,55 +60,62 @@ function formatDateShort(d) {
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  // auth + user doc
+  // Auth state
+  const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState(null);
+
+  // User doc state
   const [plan, setPlan] = useState(null);
   const [credits, setCredits] = useState(null);
   const [creditDepletedAt, setCreditDepletedAt] = useState(null);
 
-  // refill ticker
+  // Refill countdown
   const [countdownMs, setCountdownMs] = useState(0);
   const tickRef = useRef(null);
 
-  // scripts (realtime)
+  // Scripts state (realtime)
   const [scripts, setScripts] = useState([]);
   const [scriptsLoading, setScriptsLoading] = useState(true);
-  const [subKey, setSubKey] = useState(0); // manual "refresh" key
+  const [subKey, setSubKey] = useState(0); // manual refresh
 
-  // local filters
+  // Filters
   const [search, setSearch] = useState("");
 
-  // modal (full view)
+  // Modal (full view)
   const [viewOpen, setViewOpen] = useState(false);
   const [viewScript, setViewScript] = useState(null);
 
-  // ===== AUTH + USER DOC =====
+  // ===== AUTH: determine user once, then mark ready =====
   useEffect(() => {
-    const offAuth = onAuthStateChanged(auth, (u) => {
-      if (!u) {
-        setUser(null);
-        navigate("/signup", { replace: true });
-        return;
-      }
-      setUser(u);
-
-      // Live user doc (plan/credits)
-      const userRef = doc(db, "users", u.uid);
-      const offSnap = onSnapshot(userRef, (snap) => {
-        if (!snap.exists()) return;
-        const data = snap.data() || {};
-        const p =
-          data.subscriptionPlan && ["Basic", "Pro", "Premium"].includes(data.subscriptionPlan)
-            ? data.subscriptionPlan
-            : null;
-        setPlan(p);
-        setCredits(typeof data.credits === "number" ? data.credits : null);
-        setCreditDepletedAt(toDateMaybe(data.creditDepletedAt));
-      });
-      return offSnap;
+    const off = onAuthStateChanged(auth, (u) => {
+      setUser(u || null);
+      setAuthReady(true);
     });
-    return () => offAuth();
-  }, [navigate]);
+    return () => off();
+  }, []);
+
+  // Redirect only after auth is known
+  useEffect(() => {
+    if (authReady && !user) navigate("/signup", { replace: true });
+  }, [authReady, user, navigate]);
+
+  // ===== USER DOC subscription (plan/credits) =====
+  useEffect(() => {
+    if (!user) return;
+    const ref = doc(db, "users", user.uid);
+    const off = onSnapshot(ref, (snap) => {
+      if (!snap.exists()) return;
+      const data = snap.data() || {};
+      const p =
+        data.subscriptionPlan && ["Basic", "Pro", "Premium"].includes(data.subscriptionPlan)
+          ? data.subscriptionPlan
+          : null;
+      setPlan(p);
+      setCredits(typeof data.credits === "number" ? data.credits : null);
+      setCreditDepletedAt(toDateMaybe(data.creditDepletedAt));
+    });
+    return () => off();
+  }, [user?.uid]);
 
   // ===== REFILL COUNTDOWN =====
   useEffect(() => {
@@ -128,13 +135,13 @@ export default function Dashboard() {
     };
   }, [credits, creditDepletedAt]);
 
-  // ===== REALTIME SCRIPTS (fixes "need to refresh") =====
+  // ===== SCRIPTS subscription (realtime) =====
   useEffect(() => {
     if (!user) return;
     setScriptsLoading(true);
     const ref = collection(db, "users", user.uid, "scripts");
     const q = query(ref, orderBy("createdAt", "desc"));
-    const unsub = onSnapshot(
+    const off = onSnapshot(
       q,
       (snap) => {
         const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -143,19 +150,19 @@ export default function Dashboard() {
       },
       () => setScriptsLoading(false)
     );
-    return () => unsub();
+    return () => off();
   }, [user?.uid, subKey]);
 
+  // Derived
   const filteredScripts = useMemo(() => {
     if (!search.trim()) return scripts;
     const q = search.toLowerCase();
     return scripts.filter((s) => {
       const text = (s.text || "").toLowerCase();
-      const meta =
-        [s.niche, s.subCategory, s.followerCount, s.tone, s.moreSpecific]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
+      const meta = [s.niche, s.subCategory, s.followerCount, s.tone, s.moreSpecific]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
       return text.includes(q) || meta.includes(q);
     });
   }, [scripts, search]);
@@ -163,7 +170,7 @@ export default function Dashboard() {
   const totalCount = scripts.length;
   const showingCount = filteredScripts.length;
 
-  // ===== ACTIONS =====
+  // Actions
   const toast = (msg) => {
     const el = document.createElement("div");
     el.className = "dash-toast";
@@ -175,18 +182,11 @@ export default function Dashboard() {
       setTimeout(() => el.remove(), 250);
     }, 1200);
   };
-
-  const handleCopy = (txt) => {
-    navigator.clipboard
-      .writeText(String(txt || ""))
-      .then(() => toast("Copied ✔"))
-      .catch(() => {});
-  };
-
+  const handleCopy = (txt) =>
+    navigator.clipboard.writeText(String(txt || "")).then(() => toast("Copied ✔"));
   const handleDelete = async (id) => {
     if (!user) return;
-    const ok = window.confirm("Delete this script permanently?");
-    if (!ok) return;
+    if (!window.confirm("Delete this script permanently?")) return;
     try {
       await deleteDoc(doc(db, "users", user.uid, "scripts", id));
       if (viewOpen && viewScript?.id === id) {
@@ -199,7 +199,6 @@ export default function Dashboard() {
       console.error(e);
     }
   };
-
   const downloadText = (filename, content) => {
     const blob = new Blob([String(content || "")], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -211,10 +210,9 @@ export default function Dashboard() {
     a.remove();
     URL.revokeObjectURL(url);
   };
-
   const refreshScripts = () => setSubKey((k) => k + 1);
 
-  // ===== MODAL =====
+  // Modal helpers
   const openView = (script) => {
     setViewScript(script);
     setViewOpen(true);
@@ -224,13 +222,12 @@ export default function Dashboard() {
     setViewScript(null);
   };
 
-  const planHue =
-    plan === "Premium" ? "cyan" : plan === "Pro" ? "violet" : "slate";
+  const planHue = plan === "Premium" ? "cyan" : plan === "Pro" ? "violet" : "slate";
   const showCountdown = credits === 0 && countdownMs > 0;
 
   return (
     <div className="dash">
-      {/* Top heading */}
+      {/* Header */}
       <header className="dash__header">
         <div className="dash__hello">
           <h1 className="dash__title">
@@ -240,7 +237,7 @@ export default function Dashboard() {
         </div>
 
         <div className="dash__headActions">
-          <button className="btn btn--ghost" onClick={refreshScripts} disabled={scriptsLoading} title="Refresh">
+          <button className="btn btn--ghost" onClick={refreshScripts} disabled={scriptsLoading}>
             <FiRefreshCcw />
             <span>Refresh</span>
           </button>
@@ -251,7 +248,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* KPI / Summary cards */}
+      {/* KPI cards */}
       <section className="dash__kpis">
         <article className={`kpi kpi--${planHue}`} role="status" aria-live="polite">
           <div className="kpi__label">Subscription</div>
@@ -302,7 +299,7 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {/* Scripts list */}
+      {/* Scripts */}
       <section className="dash__scripts">
         {scriptsLoading ? (
           <div className="dash__loading">Loading…</div>
@@ -357,7 +354,7 @@ export default function Dashboard() {
         )}
       </section>
 
-      {/* ===== Full-view Modal ===== */}
+      {/* Full-view modal */}
       {viewOpen && viewScript && (
         <div
           className="dash-modal"
