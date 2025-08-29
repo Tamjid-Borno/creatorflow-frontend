@@ -67,9 +67,13 @@ function BareLayout({ children }) {
 }
 
 function AppRoot() {
-  // keep dark mode tokens
+  // keep dark mode tokens + nuke legacy plan key once
   useEffect(() => {
     document.documentElement.classList.add("dark");
+    try {
+      // Remove legacy key so old browsers don't leak a plan to new users
+      localStorage.removeItem("cf_selected_plan");
+    } catch {}
     return () => document.documentElement.classList.remove("dark");
   }, []);
 
