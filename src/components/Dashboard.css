@@ -581,3 +581,15 @@
 @media (prefers-reduced-motion: reduce){
   .dash__title{ animation: none; }
 }
+
+/* === Safe breathing room below fixed Navbar & iOS safe-area (height-responsive) === */
+.dash{
+  /* Add extra top padding that adapts to small heights + iOS notch */
+  padding-top: calc(env(safe-area-inset-top, 0px) + clamp(18px, 5dvh, 32px));
+}
+@media (max-width: 640px){
+  .dash{
+    /* a touch more space on phones */
+    padding-top: calc(env(safe-area-inset-top, 0px) + clamp(22px, 6dvh, 40px));
+  }
+}
