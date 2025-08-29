@@ -484,3 +484,10 @@
 @media (prefers-reduced-motion: reduce){
   .dash-modal, .btn { transition: none !important; }
 }
+
+/* Kill any global reveal styles that target ".card" from other pages */
+.dash .card {
+  opacity: 1 !important;
+  transform: none !important;
+  will-change: auto !important;
+}
