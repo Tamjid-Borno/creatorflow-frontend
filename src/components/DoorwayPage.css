@@ -25,6 +25,9 @@
   --header-pad-x: clamp(16px, 3vw, 40px);
   --header-pad-top: clamp(8px, 1.4vw, 14px);
   --header-pad-bottom: clamp(6px, 1.2vw, 12px);
+
+  /* ❗️NEW: minimum free space above the fixed card (protects header) */
+  --top-safe: calc(env(safe-area-inset-top, 0px) + clamp(84px, 18svh, 140px));
 }
 
 /* ≤980px: tuned rhythm for “mobile-like” screens */
@@ -33,6 +36,8 @@
     --stack-gap: clamp(6px, 1.2vw, 12px);
     --header-pad-top: clamp(6px, 1.2vw, 12px);
     --header-pad-bottom: clamp(6px, 1vw, 10px);
+    /* a touch more space on short phones */
+    --top-safe: calc(env(safe-area-inset-top, 0px) + clamp(96px, 22svh, 160px));
   }
 }
 
@@ -87,11 +92,13 @@
    ========================= */
 .doorway-wrapper{ width:100vw; min-height:100svh; overflow:hidden; position:relative; background:var(--bg2); }
 
-/* Tighter layout + reserve space so the fixed card never overlaps header */
+/* Reserve enough space ABOVE for the fixed card (prevents overlap with header) */
 .content-wrapper{
   position:relative; display:flex; flex-direction:column; justify-content:flex-start;
   gap:var(--stack-gap); min-height:100svh; z-index:10; padding:0; box-sizing:border-box;
-  padding-bottom: clamp(200px, 34vh, 420px); /* reserved space behind fixed card */
+
+  /* ⬇️ Increased: leave generous room for the fixed card on short phones */
+  padding-bottom: clamp(360px, 66svh, 820px);
 }
 
 /* =========================
@@ -124,8 +131,9 @@
   bottom: max(12px, env(safe-area-inset-bottom, 12px)); /* iOS safe-area */
   z-index: 15;
 
+  /* grid with shrinkable center row */
   display: grid;
-  grid-template-rows: auto 1fr auto;  /* title / text / controls */
+  grid-template-rows: auto minmax(0, 1fr) auto;  /* title / scroll area / controls */
   gap: .9rem;
   align-items: start;
 
@@ -137,7 +145,12 @@
   box-shadow: 0 -2px 18px rgba(0,0,0,.4);
   padding: 1.2rem 1.1rem;
   color:#fff; box-sizing:border-box;
+
   min-height: 260px;
+
+  /* ❗️NEW: never let the card consume the whole viewport */
+  max-height: calc(100svh - var(--top-safe));
+  overflow: hidden;            /* child (inside-card) will scroll */
 }
 @media (max-width:980px){
   .foreground-card{ width:min(96%, 760px); border-radius:16px 16px 0 0; padding:1rem .9rem; gap:.8rem }
@@ -156,15 +169,19 @@
    ========================= */
 .inside-card{
   background: transparent; border-radius:10px; width:100%; margin:0 auto;
-  min-height: clamp(150px, 26vh, 300px);
-  max-height: clamp(220px, 52vh, 560px); /* default for fixed card */
+
+  /* Let the middle pane shrink and scroll */
+  min-height: 0;
+  height: auto;
+  max-height: none;
+
   overflow-y:auto; font-family:"Raleway", sans-serif; color:#F2F4FF;
   font-size:1.04rem; line-height:1.8; padding:1rem 1rem 1.1rem;
   display:flex; flex-direction:column; align-items:flex-start; scroll-behavior:smooth;
   scrollbar-width:thin; scrollbar-color:rgba(222,116,162,.32) transparent;
 }
-@media (max-width:980px){ .inside-card{ font-size:1rem; line-height:1.7; max-height:calc(100svh - 300px) } }
-@media (max-width:480px){ .inside-card{ font-size:.95rem; line-height:1.6; max-height:calc(100svh - 260px); padding:12px } }
+@media (max-width:980px){ .inside-card{ font-size:1rem; line-height:1.7 } }
+@media (max-width:480px){ .inside-card{ font-size:.95rem; line-height:1.6; padding:12px } }
 
 .markdown-output{ white-space:pre-line }
 .markdown-output p{ margin:0 0 .85rem }
@@ -288,18 +305,19 @@
 @media (min-width: 981px) {
   /* reserve more room so header never overlaps the fixed card */
   .content-wrapper{
-    padding-bottom: clamp(300px, 58vh, 820px);
+    padding-bottom: clamp(420px, 58svh, 980px);
   }
 
-  /* wider & taller docked card */
+  /* wider & taller docked card, still capped by --top-safe */
   .foreground-card{
     width: min(96%, 1500px);
     padding: 1.3rem 1.2rem;
-    min-height: clamp(420px, 85vh, 2000px);
+    min-height: 420px;
+    max-height: calc(100svh - var(--top-safe));
   }
 
-  /* taller reading window inside the card */
+  /* taller reading window inside the card (middle row scrolls) */
   .inside-card{
-    max-height: clamp(320px, 62vh, 760px);
+    /* grid row already controls height; keep scroll only */
   }
 }
