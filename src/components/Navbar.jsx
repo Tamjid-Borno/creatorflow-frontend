@@ -6,7 +6,7 @@ import {
   menuOutline,
   closeOutline,
   logOutOutline,
-  timeOutline,        // ⏱ icon for countdown
+  timeOutline, // ⏱ icon for countdown
 } from 'ionicons/icons';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
@@ -14,18 +14,8 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import logo from '../../src/logo.png';
 
-const STORAGE_KEY = 'cf_selected_plan';
 const PLAN_CREDITS = { Basic: 50, Pro: 200, Premium: 1000 };
 const REFILL_WINDOW_MS = 24 * 60 * 60 * 1000; // 24h
-
-function readPlanFromStorage() {
-  try {
-    const val = localStorage.getItem(STORAGE_KEY);
-    return val && ['Basic', 'Pro', 'Premium'].includes(val) ? val : null;
-  } catch {
-    return null;
-  }
-}
 
 function toDateMaybe(v) {
   // Firestore Timestamp → .toDate(); ISO string → new Date(…); Date → itself
@@ -49,9 +39,9 @@ const Navbar = () => {
   const [user, setUser] = useState(null);
   const [scrolled, setScrolled] = useState(false);
 
-  // plan/credits (Firestore-first; localStorage fallback when logged out)
-  const [plan, setPlan] = useState(() => readPlanFromStorage());
-  const [credits, setCredits] = useState(() => (plan ? PLAN_CREDITS[plan] : null));
+  // 🔒 Plan/credits are derived from Firestore ONLY (no browser fallback)
+  const [plan, setPlan] = useState(null);
+  const [credits, setCredits] = useState(null);
 
   // refill countdown
   const [depletedAt, setDepletedAt] = useState(null); // Date | null
@@ -65,37 +55,43 @@ const Navbar = () => {
     const unsub = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser || null);
 
+      // If logged out: clear state; do NOT read any localStorage plan
       if (!currentUser) {
-        const p = readPlanFromStorage();
-        setPlan(p);
-        setCredits(p ? PLAN_CREDITS[p] : null);
+        setPlan(null);
+        setCredits(null);
         setDepletedAt(null);
         setCountdownMs(0);
         return;
       }
 
+      // Logged in: Firestore is the single source of truth
       try {
         const ref = doc(db, 'users', currentUser.uid);
         const snap = await getDoc(ref);
         if (snap.exists()) {
           const data = snap.data() || {};
           const p =
-            (data.subscriptionPlan && ['Basic', 'Pro', 'Premium'].includes(data.subscriptionPlan)
+            data.subscriptionPlan && ['Basic', 'Pro', 'Premium'].includes(data.subscriptionPlan)
               ? data.subscriptionPlan
-              : null) || readPlanFromStorage();
+              : null;
+
           setPlan(p);
-          setCredits(typeof data.credits === 'number' ? data.credits : (p ? PLAN_CREDITS[p] : null));
+          setCredits(
+            typeof data.credits === 'number'
+              ? data.credits
+              : p
+              ? PLAN_CREDITS[p]
+              : null
+          );
           setDepletedAt(toDateMaybe(data.creditDepletedAt));
         } else {
-          const p = readPlanFromStorage();
-          setPlan(p);
-          setCredits(p ? PLAN_CREDITS[p] : null);
+          setPlan(null);
+          setCredits(null);
           setDepletedAt(null);
         }
       } catch {
-        const p = readPlanFromStorage();
-        setPlan(p);
-        setCredits(p ? PLAN_CREDITS[p] : null);
+        setPlan(null);
+        setCredits(null);
         setDepletedAt(null);
       }
     });
@@ -139,11 +135,21 @@ const Navbar = () => {
   }, []);
 
   const toggleMenu = useCallback(() => setMenuOpen((v) => !v), []);
-  const closeMenu  = useCallback(() => setMenuOpen(false), []);
-  const go = (path, opts) => { closeMenu(); navigate(path, opts); };
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+  const go = (path, opts) => {
+    closeMenu();
+    navigate(path, opts);
+  };
 
   const handleLogoutClick = async () => {
     try {
+      // 💥 Clear any lingering browser-based plan hints (legacy + new scoped keys)
+      try {
+        localStorage.removeItem('cf_selected_plan'); // legacy
+        localStorage.removeItem('cf_selected_plan_confirmed');
+        localStorage.removeItem('cf_pending_plan');
+        localStorage.removeItem('cf_plan_owner_uid');
+      } catch {}
       await signOut(auth);
       closeMenu();
       navigate('/');
@@ -158,9 +164,12 @@ const Navbar = () => {
     if (!hasPlanOrCredits) return null;
 
     const planClass = plan ? `plan-${String(plan).toLowerCase()}` : 'plan-pro';
-    const crTxt = typeof credits === 'number'
-      ? `${credits} cr`
-      : (plan ? `${PLAN_CREDITS[plan]} cr` : '');
+    const crTxt =
+      typeof credits === 'number'
+        ? `${credits} cr`
+        : plan
+        ? `${PLAN_CREDITS[plan]} cr`
+        : '';
 
     const showCountdown = credits === 0 && countdownMs > 0;
     const cdText = formatCountdown(countdownMs);
@@ -177,7 +186,10 @@ const Navbar = () => {
         <span className="cr">{crTxt}</span>
 
         {showCountdown && (
-          <span className={`refill-badge ${countdownMs < 3600_000 ? 'refill-soon' : ''}`} title="Auto-refill in 24h from depletion">
+          <span
+            className={`refill-badge ${countdownMs < 3600_000 ? 'refill-soon' : ''}`}
+            title="Auto-refill in 24h from depletion"
+          >
             <IonIcon icon={timeOutline} aria-hidden="true" />
             <span className="refill-text">Refills in {cdText}</span>
           </span>
