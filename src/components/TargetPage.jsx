@@ -4,28 +4,28 @@ import { useNavigate } from "react-router-dom";
 import "./TargetPage.css";
 import NicheArt from "../assets/creator-cosmic.svg";
 
-// 🔗 Firebase
+// Firebase
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
 
-// (Optional) if you have this util in your project
-// import { checkAndRestoreCredits } from "../utils/creditManager";
-
 /**
- * NOTE: This file assumes you import or define these option arrays somewhere:
- *   niches, subCategories, followerCounts, scriptTones
- * If they already live in a constants file, import them here.
+ * Keep your existing arrays or import them:
+ *   - niches
+ *   - subCategories
+ *   - followerCounts
+ *   - scriptTones
+ * Example:
+ * import { niches, subCategories, followerCounts, scriptTones } from "../constants/targetOptions";
  */
-// import { niches, subCategories, followerCounts, scriptTones } from "../constants/targetOptions";
 
 const TargetPage = () => {
   const navigate = useNavigate();
 
-  // 🔄 Live credits from Firestore (null = loading)
+  // Live credits from Firestore
   const [credits, setCredits] = useState(null);
 
-  // form state
+  // Form state
   const [loading, setLoading] = useState(false);
   const [niche, setNiche] = useState(null);
   const [sub, setSub] = useState(null);
@@ -33,24 +33,19 @@ const TargetPage = () => {
   const [tone, setTone] = useState(null);
   const [specific, setSpecific] = useState("");
 
-  // derive: canContinue only when we have credits value
+  // Enable Continue only when fields + credits are good
   const canContinue = useMemo(() => {
     const hasCredits = (credits ?? 0) > 0;
     return niche && sub && followers && tone && !loading && hasCredits;
   }, [niche, sub, followers, tone, loading, credits]);
 
-  // 🔐 Auth + live user doc subscription for credits
+  // Auth + live credits
   useEffect(() => {
     const offAuth = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        // Not logged in — block access and send back to signup
         navigate("/signup", { replace: true });
         return;
       }
-
-      // (Optional) Try to restore credits if you have time logic
-      // try { await checkAndRestoreCredits(user); } catch {}
-
       const userRef = doc(db, "users", user.uid);
       const offSnap = onSnapshot(userRef, (snap) => {
         if (snap.exists()) {
@@ -60,26 +55,21 @@ const TargetPage = () => {
           setCredits(0);
         }
       });
-
-      // cleanup the snapshot when auth user changes/unmounts
       return offSnap;
     });
-
     return () => offAuth();
   }, [navigate]);
 
-  // reset downstream fields on change (same as before)
+  // Reset lower fields on change
   useEffect(() => {
     setSub(null);
     setFollowers(null);
     setTone(null);
   }, [niche]);
-
   useEffect(() => {
     setFollowers(null);
     setTone(null);
   }, [sub]);
-
   useEffect(() => setTone(null), [followers]);
 
   const handleBack = () => navigate("/");
@@ -104,31 +94,33 @@ const TargetPage = () => {
 
   return (
     <div className="target">
+      {/* subtle starfield + vignette */}
       <div className="target__bg" aria-hidden="true" />
 
       <section className="target__card" role="form" aria-labelledby="target-title">
         <header className="target__cardHead">
-          {/* Credits pill (updates live) */}
+          <h1 id="target-title" className="target__title">
+            Pick your preferred niche
+          </h1>
+
+          {/* live credits pill */}
           <div className="target__credits" title="Available credits">
             <span className="target__creditsDot" aria-hidden="true" />
-            <span className="target__creditsLabel">Credits:</span>
+            <span className="target__creditsLabel">Credits</span>
             <span className="target__creditsValue">
               {credits === null ? "…" : credits}
             </span>
           </div>
         </header>
 
-        {/* Two-column content: form (2fr) | art (1fr) */}
-        <div className="target__cardInner">
-          {/* LEFT: Form */}
-          <div className="target__form">
-            <h1 id="target-title" className="target__title">
-              Pick your preferred niche
-            </h1>
-            <p className="target__subtitle">
-              We’ll tailor hooks, structure, and tone to your audience.
-            </p>
+        <p className="target__subtitle">
+          We’ll tailor hooks, structure, and tone to your audience.
+        </p>
 
+        {/* 2-column: form (2fr) | art (1fr) */}
+        <div className="target__cardInner">
+          {/* LEFT — FORM */}
+          <div className="target__form">
             <div className="target__fields">
               <label className="target__label">
                 Niche
@@ -199,6 +191,7 @@ const TargetPage = () => {
               </label>
             </div>
 
+            {/* sticky actions on mobile, inline on desktop */}
             <div className="target__actions">
               <button className="btn btn--ghost" onClick={handleBack}>
                 Back
@@ -213,22 +206,26 @@ const TargetPage = () => {
               </button>
             </div>
 
-            {!tone && <p className="target__hint">Choose a tone to continue.</p>}
+            {!tone && (
+              <p className="target__hint">Choose a tone to continue.</p>
+            )}
             {credits === 0 && (
-              <p className="target__hint">You’re out of credits—upgrade your plan to continue.</p>
+              <p className="target__hint">
+                You’re out of credits — upgrade your plan to continue.
+              </p>
             )}
           </div>
 
-          {/* RIGHT: Illustration (in-flow, anchored to baseline) */}
+          {/* RIGHT — ART */}
           <aside className="target__artCol" aria-hidden="true">
             <div className="target__artWrap">
               <img
-  src={NicheArt}
-  alt=""
-  className="target__artImg"
-  loading="lazy"
-  decoding="async"
-/>
+                src={NicheArt}
+                alt=""
+                className="target__artImg"
+                loading="lazy"
+                decoding="async"
+              />
               <div className="target__artGlow" />
             </div>
           </aside>
@@ -239,6 +236,7 @@ const TargetPage = () => {
 };
 
 export default TargetPage;
+
 
 // === NICHES (includes your originals + script-heavy additions) ===
 const niches = [
