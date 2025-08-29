@@ -1,3 +1,4 @@
+// src/components/Navbar.jsx
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './Navbar.css';
 import { IonIcon } from '@ionic/react';
@@ -6,7 +7,7 @@ import {
   menuOutline,
   closeOutline,
   logOutOutline,
-  timeOutline,
+  timeOutline, // ⏱ icon for countdown
 } from 'ionicons/icons';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
@@ -49,6 +50,9 @@ const Navbar = () => {
 
   const navigate = useNavigate();
 
+  // ───────────────────────────────────────────────────────────
+  // Auth state + load plan/credits/depletedAt from Firestore
+  // ───────────────────────────────────────────────────────────
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser || null);
@@ -94,6 +98,9 @@ const Navbar = () => {
     return unsub;
   }, []);
 
+  // ───────────────────────────────────────────────────────────
+  // Refill countdown ticker (only when credits === 0)
+  // ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (!(credits === 0 && depletedAt instanceof Date)) {
       setCountdownMs(0);
@@ -113,6 +120,7 @@ const Navbar = () => {
     };
   }, [credits, depletedAt]);
 
+  // navbar scroll styling
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
@@ -120,6 +128,7 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // close mobile drawer on resize (prevents stale open)
   useEffect(() => {
     const onResize = () => setMenuOpen(false);
     window.addEventListener('resize', onResize);
@@ -132,6 +141,7 @@ const Navbar = () => {
 
   const handleLogoutClick = async () => {
     try {
+      // clear any legacy hints (defensive)
       try {
         localStorage.removeItem('cf_selected_plan');
         localStorage.removeItem('cf_selected_plan_confirmed');
@@ -185,7 +195,10 @@ const Navbar = () => {
               title="Auto-refill in 24h from depletion"
             >
               <IonIcon icon={timeOutline} aria-hidden="true" />
-              <span className="refill-text">Refills in {cdText}</span>
+              {/* Force text to be visible on small screens */}
+              <span className="refill-text" style={{ whiteSpace: 'nowrap' }}>
+                Refills in {cdText}
+              </span>
             </span>
           )}
         </div>
@@ -210,13 +223,16 @@ const Navbar = () => {
             title="Auto-refill in 24h from depletion"
           >
             <IonIcon icon={timeOutline} aria-hidden="true" />
-            <span className="refill-text">Refills in {cdText}</span>
+            <span className="refill-text" style={{ whiteSpace: 'nowrap' }}>
+              Refills in {cdText}
+            </span>
           </span>
         )}
       </span>
     );
   };
 
+  // Primary nav links (desktop)
   const PrimaryLinks = () => (
     <nav className="primary-links" aria-label="Primary">
       <button className="nav-link" onClick={() => go('/plans')}>Get credits</button>
@@ -232,24 +248,25 @@ const Navbar = () => {
       {menuOpen && <div className="nav-backdrop" onClick={closeMenu} aria-hidden="true" />}
 
       <nav className={`custom-navbar ${scrolled ? 'is-scrolled' : ''}`} role="navigation" aria-label="Main">
-        {/* Left */}
+        {/* Left: Logo + Mobile brand text */}
         <button className="navbar-logo" onClick={() => go('/')} aria-label="CreatorFlow home">
           <img src={logo} alt="CreatorFlow logo" className="logo-img" draggable="false" />
           <span className="navbar-brand-text">CreatorFlow</span>
         </button>
 
-        {/* Center */}
+        {/* Center (desktop only) */}
         <PrimaryLinks />
 
-        {/* Right cluster */}
+        {/* Right cluster (desktop) */}
         <div className="auth-desktop">
           <PlanChip inline context="bar" />
 
           {user ? (
             <>
+              {/* 👇 Profile button now routes to Dashboard */}
               <button
                 className="nav-link user-displayname"
-                onClick={() => go('/plans', { state: { revisiting: true } })}
+                onClick={() => go('/dashboard')}
                 title={user.displayName || user.email}
               >
                 <IonIcon icon={personOutline} aria-hidden="true" />
@@ -267,18 +284,18 @@ const Navbar = () => {
               <span>Sign Up</span>
             </button>
           )}
-
-          {/* Hamburger pinned far right */}
-          <button
-            className="hamburger"
-            onClick={toggleMenu}
-            aria-label="Toggle menu"
-            aria-expanded={menuOpen ? 'true' : 'false'}
-            aria-controls="mobile-drawer"
-          >
-            <IonIcon icon={menuOpen ? closeOutline : menuOutline} />
-          </button>
         </div>
+
+        {/* Hamburger (ALWAYS last child so it sits on the far right on mobile) */}
+        <button
+          className="hamburger"
+          onClick={toggleMenu}
+          aria-label="Toggle menu"
+          aria-expanded={menuOpen ? 'true' : 'false'}
+          aria-controls="mobile-drawer"
+        >
+          <IonIcon icon={menuOpen ? closeOutline : menuOutline} />
+        </button>
 
         {/* Mobile drawer */}
         <aside
@@ -294,8 +311,8 @@ const Navbar = () => {
             <button className="nav-link" onClick={() => go('/contact')}>Contact</button>
           </div>
 
+          {/* Clean stacked presentation in the drawer */}
           <div className="drawer-section">
-            {/* Clean stacked presentation in the drawer */}
             <PlanChip context="drawer" />
           </div>
 
@@ -304,10 +321,10 @@ const Navbar = () => {
               <>
                 <button
                   className="nav-link user-displayname"
-                  onClick={() => go('/plans', { state: { revisiting: true } })}
+                  onClick={() => go('/dashboard')}
+                  title={user.displayName || user.email}
                 >
                   <IonIcon icon={personOutline} aria-hidden="true" />
-                  {/* Always show name in drawer */}
                   <span className="user-text user-text--drawer">{user.displayName || user.email}</span>
                 </button>
 
