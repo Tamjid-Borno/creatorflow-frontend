@@ -16,7 +16,16 @@ import {
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
 
-import { FiSearch, FiCopy, FiTrash2, FiRefreshCcw, FiPlus } from "react-icons/fi";
+import {
+  FiSearch,
+  FiCopy,
+  FiTrash2,
+  FiRefreshCcw,
+  FiPlus,
+  FiMaximize2,
+  FiX,
+  FiDownload,
+} from "react-icons/fi";
 import { IoTimeOutline } from "react-icons/io5";
 
 import "./Dashboard.css";
@@ -29,7 +38,6 @@ function toDateMaybe(v) {
   const d = v instanceof Date ? v : new Date(v);
   return isNaN(d.getTime()) ? null : d;
 }
-
 function formatCountdown(ms) {
   if (ms <= 0) return "00:00:00";
   const s = Math.floor(ms / 1000);
@@ -38,7 +46,6 @@ function formatCountdown(ms) {
   const ss = String(s % 60).padStart(2, "0");
   return `${hh}:${mm}:${ss}`;
 }
-
 function formatDateShort(d) {
   try {
     return new Intl.DateTimeFormat(undefined, {
@@ -75,6 +82,10 @@ export default function Dashboard() {
 
   // local filters
   const [search, setSearch] = useState("");
+
+  // modal (full view)
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewScript, setViewScript] = useState(null);
 
   // ===== AUTH + USER DOC =====
   useEffect(() => {
@@ -140,7 +151,6 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
-
   const loadMore = async () => {
     if (!user || !hasMore || !lastDocSnap) return;
     setLoading(true);
@@ -157,9 +167,7 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
-
   useEffect(() => {
-    // fetch on first user load
     if (user) loadInitial();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid]);
@@ -170,27 +178,31 @@ export default function Dashboard() {
     return scripts.filter((s) => {
       const text = (s.text || "").toLowerCase();
       const meta =
-        [s.niche, s.subCategory, s.followerCount, s.tone, s.moreSpecific].filter(Boolean).join(" ").toLowerCase();
+        [s.niche, s.subCategory, s.followerCount, s.tone, s.moreSpecific]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
       return text.includes(q) || meta.includes(q);
     });
   }, [scripts, search]);
 
   // ===== ACTIONS =====
+  const toast = (msg) => {
+    const el = document.createElement("div");
+    el.className = "dash-toast";
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.classList.add("show"));
+    setTimeout(() => {
+      el.classList.remove("show");
+      setTimeout(() => el.remove(), 250);
+    }, 1200);
+  };
+
   const handleCopy = (txt) => {
     navigator.clipboard
       .writeText(String(txt || ""))
-      .then(() => {
-        // small toast
-        const el = document.createElement("div");
-        el.className = "dash-toast";
-        el.textContent = "Copied ✔";
-        document.body.appendChild(el);
-        setTimeout(() => el.classList.add("show"));
-        setTimeout(() => {
-          el.classList.remove("show");
-          setTimeout(() => el.remove(), 250);
-        }, 1200);
-      })
+      .then(() => toast("Copied ✔"))
       .catch(() => {});
   };
 
@@ -201,6 +213,10 @@ export default function Dashboard() {
     try {
       await deleteDoc(doc(db, "users", user.uid, "scripts", id));
       setScripts((prev) => prev.filter((s) => s.id !== id));
+      if (viewOpen && viewScript?.id === id) {
+        setViewOpen(false);
+        setViewScript(null);
+      }
     } catch (e) {
       alert("Failed to delete. Please try again.");
       // eslint-disable-next-line no-console
@@ -208,11 +224,45 @@ export default function Dashboard() {
     }
   };
 
-  const planHue =
-    plan === "Premium" ? "cyan"
-    : plan === "Pro" ? "violet"
-    : "slate";
+  const downloadText = (filename, content) => {
+    const blob = new Blob([String(content || "")], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename || "script.txt";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
 
+  // ===== MODAL =====
+  const openView = (script) => {
+    setViewScript(script);
+    setViewOpen(true);
+  };
+  const closeView = () => {
+    setViewOpen(false);
+    setViewScript(null);
+  };
+
+  // lock scroll + ESC close
+  useEffect(() => {
+    if (!viewOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e) => {
+      if (e.key === "Escape") closeView();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [viewOpen]);
+
+  const planHue =
+    plan === "Premium" ? "cyan" : plan === "Pro" ? "violet" : "slate";
   const showCountdown = credits === 0 && countdownMs > 0;
 
   return (
@@ -311,17 +361,22 @@ export default function Dashboard() {
                     </div>
                   </header>
 
-                  <div className="card__body">
-                    {/* clamp preview to keep grid tidy */}
+                  {/* Clicking the preview also opens full view */}
+                  <button className="card__body" onClick={() => openView(s)} title="View full">
                     <div className="card__preview">
-                      <ReactMarkdown>{String(s.text || "").slice(0, 800)}</ReactMarkdown>
+                      <ReactMarkdown>{String(s.text || "").slice(0, 1200)}</ReactMarkdown>
                     </div>
-                  </div>
+                    <div className="card__fade" aria-hidden="true" />
+                  </button>
 
                   <footer className="card__foot">
                     <button className="tool" onClick={() => handleCopy(s.text)} title="Copy">
                       <FiCopy />
                       <span>Copy</span>
+                    </button>
+                    <button className="tool" onClick={() => openView(s)} title="View full">
+                      <FiMaximize2 />
+                      <span>View</span>
                     </button>
                     <button className="tool tool--danger" onClick={() => handleDelete(s.id)} title="Delete">
                       <FiTrash2 />
@@ -343,6 +398,69 @@ export default function Dashboard() {
           </div>
         )}
       </section>
+
+      {/* ===== Full-view Modal ===== */}
+      {viewOpen && viewScript && (
+        <div
+          className="dash-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dash-modal-title"
+          onMouseDown={(e) => {
+            // backdrop close: only when clicking the backdrop, not the dialog
+            if (e.target.classList.contains("dash-modal")) closeView();
+          }}
+        >
+          <div className="dash-modal__dialog">
+            <header className="dash-modal__head">
+              <h2 id="dash-modal-title" className="dash-modal__title">
+                Full script
+              </h2>
+              <div className="dash-modal__meta">
+                {viewScript.niche && <span className="tag">{viewScript.niche}</span>}
+                {viewScript.subCategory && <span className="tag tag--muted">{viewScript.subCategory}</span>}
+                {viewScript.tone && <span className="tag tag--tone">{viewScript.tone}</span>}
+                {viewScript.createdAt && (
+                  <span className="tag tag--date">
+                    {formatDateShort(toDateMaybe(viewScript.createdAt))}
+                  </span>
+                )}
+              </div>
+              <button className="icon-btn" onClick={closeView} aria-label="Close">
+                <FiX />
+              </button>
+            </header>
+
+            <div className="dash-modal__body">
+              <ReactMarkdown>{String(viewScript.text || "")}</ReactMarkdown>
+            </div>
+
+            <footer className="dash-modal__foot">
+              <button className="btn btn--ghost" onClick={() => handleCopy(viewScript.text)}>
+                <FiCopy />
+                <span>Copy</span>
+              </button>
+              <button
+                className="btn btn--ghost"
+                onClick={() =>
+                  downloadText(
+                    `script-${viewScript.id || "export"}.txt`,
+                    viewScript.text || ""
+                  )
+                }
+              >
+                <FiDownload />
+                <span>Download</span>
+              </button>
+              <div className="spacer" />
+              <button className="btn btn--primary" onClick={closeView}>
+                <FiX />
+                <span>Close</span>
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
