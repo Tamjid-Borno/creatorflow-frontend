@@ -37,22 +37,42 @@
 }
 
 /* ===== Motion helpers ===== */
-@keyframes moveInCircle { 0%{transform:rotate(0)} 50%{transform:rotate(180deg)} 100%{transform:rotate(360deg)} }
-@keyframes moveVertical { 0%{transform:translateY(-32%)} 50%{transform:translateY(32%)} 100%{transform:translateY(-32%)} }
-@keyframes moveHorizontal{ 0%{transform:translateX(-28%) translateY(-6%)} 50%{transform:translateX(28%) translateY(6%)} 100%{transform:translateX(-28%) translateY(-6%)} }
+@keyframes moveInCircle {
+  0%{transform:rotate(0)}
+  50%{transform:rotate(180deg)}
+  100%{transform:rotate(360deg)}
+}
+@keyframes moveVertical {
+  0%{transform:translateY(-32%)}
+  50%{transform:translateY(32%)}
+  100%{transform:translateY(-32%)}
+}
+@keyframes moveHorizontal{
+  0%{transform:translateX(-28%) translateY(-6%)}
+  50%{transform:translateX(28%) translateY(6%)}
+  100%{transform:translateX(-28%) translateY(-6%)}
+}
 
 /* =========================
    Background (darker + subtle stars)
    ========================= */
 .gradient-bg{
-  position: absolute; inset: 0; overflow: hidden; z-index: 1;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 1;
   background:
     radial-gradient(1200px 800px at 20% -10%, #0A0D1C 0%, transparent 60%),
     radial-gradient(800px 600px at 120% 120%, #0B0E1E 0%, transparent 55%),
     linear-gradient(180deg, var(--bg1), var(--bg2));
 }
 .gradient-bg::after{
-  content:""; position:absolute; inset:0; pointer-events:none; opacity:.05; mix-blend-mode:screen;
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:.05;
+  mix-blend-mode:screen;
   background-image:
     radial-gradient(1px 1px at 7% 12%, rgba(255,255,255,.9), transparent 60%),
     radial-gradient(1px 1px at 27% 73%, rgba(255,255,255,.8), transparent 60%),
@@ -60,22 +80,54 @@
     radial-gradient(1px 1px at 83% 58%, rgba(255,255,255,.7), transparent 60%),
     radial-gradient(1px 1px at 42% 44%, rgba(255,255,255,.7), transparent 60%);
 }
-.gradient-bg svg{ position: fixed; inset: 0; width: 0; height: 0; }
+.gradient-bg svg{
+  position: fixed;
+  inset: 0;
+  width: 0;
+  height: 0;
+}
 .gradients-container{ filter: blur(var(--blob-blur)); width:100%; height:100%; }
-.g1,.g2,.g3,.g4,.g5,.interactive{ position:absolute; mix-blend-mode:var(--blending); will-change:transform,opacity; }
-
-.g1{ background:radial-gradient(circle, rgba(var(--accent1),var(--blob-opacity)) 0, rgba(var(--accent1),0) 55%); width:var(--circle-size); height:var(--circle-size); top:calc(50% - var(--circle-size)/2); left:calc(50% - var(--circle-size)/2); transform-origin:center; animation:moveVertical 60s ease-in-out infinite; opacity:.9 }
-.g2{ background:radial-gradient(circle, rgba(var(--accent2),var(--blob-opacity)) 0, rgba(var(--accent2),0) 55%); width:var(--circle-size); height:var(--circle-size); top:calc(50% - var(--circle-size)/2); left:calc(50% - var(--circle-size)/2); transform-origin:calc(50% - 340px); animation:moveInCircle 90s linear infinite; opacity:.75 }
-.g3{ background:radial-gradient(circle, rgba(var(--accent3),var(--blob-opacity)) 0, rgba(var(--accent3),0) 55%); width:var(--circle-size); height:var(--circle-size); top:calc(50% - var(--circle-size)/2 + 160px); left:calc(50% - var(--circle-size)/2 - 440px); transform-origin:calc(50% + 360px); animation:moveInCircle 120s linear infinite; opacity:.5 }
-.g4{ background:radial-gradient(circle, rgba(var(--accent4),.22) 0, rgba(var(--accent4),0) 55%); width:var(--circle-size); height:var(--circle-size); top:calc(50% - var(--circle-size)/2); left:calc(50% - var(--circle-size)/2); transform-origin:calc(50% - 200px); animation:moveHorizontal 100s ease-in-out infinite; opacity:.45 }
-.g5{ background:radial-gradient(circle, rgba(var(--accent5),.28) 0, rgba(var(--accent5),0) 60%); width:calc(var(--circle-size)*1.8); height:calc(var(--circle-size)*1.8); top:calc(50% - var(--circle-size)*.9); left:calc(50% - var(--circle-size)*.9); transform-origin:calc(50% - 720px) calc(50% + 200px); animation:moveInCircle 110s ease infinite; opacity:.55 }
-
+.g1,.g2,.g3,.g4,.g5,.interactive{
+  position:absolute;
+  mix-blend-mode:var(--blending);
+  will-change:transform,opacity;
+}
+.g1{
+  background:radial-gradient(circle, rgba(var(--accent1),var(--blob-opacity)) 0, rgba(var(--accent1),0) 55%);
+  width:var(--circle-size); height:var(--circle-size);
+  top:calc(50% - var(--circle-size)/2); left:calc(50% - var(--circle-size)/2);
+  transform-origin:center; animation:moveVertical 60s ease-in-out infinite; opacity:.9
+}
+.g2{
+  background:radial-gradient(circle, rgba(var(--accent2),var(--blob-opacity)) 0, rgba(var(--accent2),0) 55%);
+  width:var(--circle-size); height:var(--circle-size);
+  top:calc(50% - var(--circle-size)/2); left:calc(50% - var(--circle-size)/2);
+  transform-origin:calc(50% - 340px); animation:moveInCircle 90s linear infinite; opacity:.75
+}
+.g3{
+  background:radial-gradient(circle, rgba(var(--accent3),var(--blob-opacity)) 0, rgba(var(--accent3),0) 55%);
+  width:var(--circle-size); height:var(--circle-size);
+  top:calc(50% - var(--circle-size)/2 + 160px); left:calc(50% - var(--circle-size)/2 - 440px);
+  transform-origin:calc(50% + 360px); animation:moveInCircle 120s linear infinite; opacity:.5
+}
+.g4{
+  background:radial-gradient(circle, rgba(var(--accent4),.22) 0, rgba(var(--accent4),0) 55%);
+  width:var(--circle-size); height:var(--circle-size);
+  top:calc(50% - var(--circle-size)/2); left:calc(50% - var(--circle-size)/2);
+  transform-origin:calc(50% - 200px); animation:moveHorizontal 100s ease-in-out infinite; opacity:.45
+}
+.g5{
+  background:radial-gradient(circle, rgba(var(--accent5),.28) 0, rgba(var(--accent5),0) 60%);
+  width:calc(var(--circle-size)*1.8); height:calc(var(--circle-size)*1.8);
+  top:calc(50% - var(--circle-size)*.9); left:calc(50% - var(--circle-size)*.9);
+  transform-origin:calc(50% - 720px) calc(50% + 200px); animation:moveInCircle 110s ease infinite; opacity:.55
+}
 .interactive{
   background: radial-gradient(circle, rgba(var(--interactive), .28) 0%, rgba(var(--interactive),0) 60%);
-  width:200px; height:200px; top:0; left:0; border-radius:50%; pointer-events:none; z-index:2;
+  width:200px; height:200px; top:0; left:0; border-radius:50%;
+  pointer-events:none; z-index:2;
   transition: transform .2s ease-out, opacity .2s ease-out;
 }
-
 @media (prefers-reduced-motion: reduce){
   .gradients-container{ filter:none }
   .g1,.g2,.g3,.g4,.g5{ animation:none !important; opacity:.35 }
@@ -85,8 +137,9 @@
 /* =========================
    Page shell
    ========================= */
-.doorway-wrapper{ width:100vw; min-height:100svh; overflow:hidden; position:relative; background:var(--bg2); }
-
+.doorway-wrapper{
+  width:100vw; min-height:100svh; overflow:hidden; position:relative; background:var(--bg2);
+}
 /* Tighter layout + reserve space so the fixed card never overlaps header */
 .content-wrapper{
   position:relative; display:flex; flex-direction:column; justify-content:flex-start;
@@ -101,7 +154,9 @@
   width:100%; padding:var(--header-pad-top) var(--header-pad-x) var(--header-pad-bottom);
   color:#fff; text-align:left; box-sizing:border-box;
 }
-.heading-logo{ width:36px; height:auto; vertical-align:middle; margin-right:10px; display:inline-block }
+.heading-logo{
+  width:36px; height:auto; vertical-align:middle; margin-right:10px; display:inline-block
+}
 .heading-container h1{
   display:inline-block; vertical-align:middle; margin:0;
   font-size:clamp(1.4rem, 3.6vw, 2.6rem);
@@ -115,7 +170,7 @@
 }
 
 /* =========================
-   Foreground card (FIXED to bottom by default)
+   Foreground card (FIXED to bottom)
    ========================= */
 .foreground-card{
   position: fixed;
@@ -125,9 +180,8 @@
   z-index: 15;
 
   display: grid;
-  grid-template-rows: auto 1fr auto;  /* title / text / controls */
-  gap: .9rem;
-  align-items: start;
+  grid-template-rows: auto 1fr auto; /* title / text / controls */
+  gap: .9rem; align-items: start;
 
   width: min(92%, 1100px);
   margin: 0 auto;
@@ -136,19 +190,27 @@
   backdrop-filter: blur(18px);
   box-shadow: 0 -2px 18px rgba(0,0,0,.4);
   padding: 1.2rem 1.1rem;
-  color:#fff; box-sizing:border-box;
-  min-height: 260px;
+  color:#fff; box-sizing:border-box; min-height: 260px;
 }
 @media (max-width:980px){
-  .foreground-card{ width:min(96%, 760px); border-radius:16px 16px 0 0; padding:1rem .9rem; gap:.8rem }
+  .foreground-card{
+    width:min(96%, 760px);
+    border-radius:16px 16px 0 0;
+    padding:1rem .9rem;
+    gap:.8rem;
+  }
 }
 @media (max-width:480px){
-  .foreground-card{ width:100%; border-radius:14px 14px 0 0; padding:.75rem; gap:.75rem; box-shadow:0 -1px 10px rgba(0,0,0,.25) }
+  .foreground-card{
+    width:100%;
+    border-radius:14px 14px 0 0;
+    padding:.75rem;
+    gap:.75rem;
+    box-shadow:0 -1px 10px rgba(0,0,0,.25)
+  }
 }
-
 .foreground-card h2{
-  font-size:clamp(1rem, 2vw, 1.35rem);
-  margin:0; align-self:center; font-weight:600;
+  font-size:clamp(1rem, 2vw, 1.35rem); margin:0; align-self:center; font-weight:600;
 }
 
 /* =========================
@@ -158,32 +220,45 @@
   background: transparent; border-radius:10px; width:100%; margin:0 auto;
   min-height: clamp(150px, 26vh, 300px);
   max-height: clamp(220px, 52vh, 560px); /* default for fixed card */
-  overflow-y:auto; font-family:"Raleway", sans-serif; color:#F2F4FF;
-  font-size:1.04rem; line-height:1.8; padding:1rem 1rem 1.1rem;
-  display:flex; flex-direction:column; align-items:flex-start; scroll-behavior:smooth;
+  overflow-y:auto;
+  font-family:"Raleway", sans-serif; color:#F2F4FF; font-size:1.04rem; line-height:1.8;
+  padding:1rem 1rem 1.1rem;
+  display:flex; flex-direction:column; align-items:flex-start;
+  scroll-behavior:smooth;
   scrollbar-width:thin; scrollbar-color:rgba(222,116,162,.32) transparent;
 }
-@media (max-width:980px){ .inside-card{ font-size:1rem; line-height:1.7; max-height:calc(100svh - 300px) } }
-@media (max-width:480px){ .inside-card{ font-size:.95rem; line-height:1.6; max-height:calc(100svh - 260px); padding:12px } }
-
+@media (max-width:980px){
+  .inside-card{
+    font-size:1rem; line-height:1.7;
+    max-height:calc(100svh - 300px);
+  }
+}
+@media (max-width:480px){
+  .inside-card{
+    font-size:.95rem; line-height:1.6;
+    max-height:calc(100svh - 260px); padding:12px
+  }
+}
 .markdown-output{ white-space:pre-line }
 .markdown-output p{ margin:0 0 .85rem }
 .inside-card .markdown-output p,
 .inside-card .markdown-output pre{
   font-family:inherit; white-space:pre-wrap; word-break:break-word; color:#fff; text-align:left;
 }
-.inside-card::after{ content:none } /* remove blinking caret */
+.inside-card::after{ content:none }
 
-.thinking-indicator{ font-style:italic; color:#d6c6e4; font-weight:600; margin-bottom:8px; animation:pulseText 1.2s ease-in-out infinite }
+/* remove blinking caret */
+.thinking-indicator{
+  font-style:italic; color:#d6c6e4; font-weight:600; margin-bottom:8px; animation:pulseText 1.2s ease-in-out infinite
+}
 @keyframes pulseText{ 0%,100%{opacity:.55} 50%{opacity:1} }
 
 /* =========================
    Controls
    ========================= */
 .buttons{
-  display:flex; flex-direction:row; gap:.8rem; width:min(92%, 920px);
-  margin:0 auto; justify-content:space-between; padding:16px;
-  background:rgba(8,10,22,.6); border-radius:16px;
+  display:flex; flex-direction:row; gap:.8rem; width:min(92%, 920px); margin:0 auto;
+  justify-content:space-between; padding:16px; background:rgba(8,10,22,.6); border-radius:16px;
 }
 @media (max-width:980px){
   .buttons{
@@ -202,14 +277,18 @@
   content:""; position:absolute; inset:-2px; border-radius:12px;
   background:linear-gradient(90deg,#7C74FF,#A87CFF);
   -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite:xor; mask-composite:exclude; padding:2px; pointer-events:none; transition:background .25s ease;
+  -webkit-mask-composite:xor; mask-composite:exclude; padding:2px; pointer-events:none;
+  transition:background .25s ease;
 }
 .generate-btn:hover{ background:linear-gradient(90deg,#7C74FF,#A87CFF); transform:translateY(-1px) }
+
 .prompt-btn::before{
   content:""; position:absolute; inset:0; border-radius:12px; padding:1.5px;
-  background:linear-gradient(270deg,#CFCFE3,#4B4B55,#7C74FF,#7C74FF,#4B4B55,#CFCFE3); background-size:600% 600%;
+  background:linear-gradient(270deg,#CFCFE3,#4B4B55,#7C74FF,#7C74FF,#4B4B55,#CFCFE3);
+  background-size:600% 600%;
   -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite:xor; mask-composite:exclude; animation:gradientAnimation 6s linear infinite; pointer-events:none;
+  -webkit-mask-composite:xor; mask-composite:exclude;
+  animation:gradientAnimation 6s linear infinite; pointer-events:none;
 }
 @keyframes gradientAnimation{ 0%{background-position:0% 50%} 100%{background-position:100% 50%} }
 
@@ -222,15 +301,15 @@
 .back-btn-wrapper{ position:relative; display:inline-block }
 .tooltip{
   position:absolute; bottom:-1.2rem; left:50%; transform:translateX(-50%) scale(.95);
-  background:rgba(0,0,0,.75); color:#fff; padding:.25rem .6rem; font-size:.75rem; border-radius:6px;
-  opacity:0; pointer-events:none; transition:all .2s ease; white-space:nowrap;
+  background:rgba(0,0,0,.75); color:#fff; padding:.25rem .6rem; font-size:.75rem;
+  border-radius:6px; opacity:0; pointer-events:none; transition:all .2s ease; white-space:nowrap;
 }
 .back-btn-wrapper:hover .tooltip{ opacity:1; transform:translateX(-50%) scale(1) }
 
 .copy-btn{
   width:48px; height:48px; background:rgba(255,255,255,.06); color:#ccc; border-radius:50%;
-  border:1px solid rgba(255,255,255,.1); backdrop-filter:blur(4px); font-size:1.05rem;
-  cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .22s ease; padding:0; user-select:none;
+  border:1px solid rgba(255,255,255,.1); backdrop-filter:blur(4px); font-size:1.05rem; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:all .22s ease; padding:0; user-select:none;
 }
 .copy-btn:hover{ background:rgba(255,255,255,.12); color:#fff; transform:translateY(-1px) }
 
@@ -245,8 +324,8 @@
 
 @media (max-width:980px){
   .generate-btn{ grid-area:gen; width:100%; padding:10px 12px; font-size:.92rem !important }
-  .prompt-btn{   grid-area:prompt; width:100%; padding:10px 12px; font-size:.92rem !important }
-  .credit-box{   grid-area:credit; justify-content:center; text-align:center; padding:8px 10px; font-size:.9rem }
+  .prompt-btn{ grid-area:prompt; width:100%; padding:10px 12px; font-size:.92rem !important }
+  .credit-box{ grid-area:credit; justify-content:center; text-align:center; padding:8px 10px; font-size:.9rem }
   .back-btn-wrapper{ grid-area:back; justify-self:start }
   .copy-btn{ grid-area:copy; justify-self:end }
 }
@@ -260,13 +339,14 @@
 .inside-card::-webkit-scrollbar{ width:8px; background:transparent }
 .inside-card::-webkit-scrollbar-track{ background:transparent }
 .inside-card::-webkit-scrollbar-thumb{
-  background:rgba(224,135,174,.24);
-  border-radius:12px; border:2px solid transparent; background-clip:content-box;
+  background:rgba(224,135,174,.24); border-radius:12px; border:2px solid transparent; background-clip:content-box;
   box-shadow:0 0 8px 2px rgba(231,45,126,.45), inset 0 0 5px 2px rgba(255,255,255,.12);
   opacity:0; transition:opacity .3s ease, background-color .25s ease;
 }
 .inside-card:hover::-webkit-scrollbar-thumb,
-.inside-card:focus::-webkit-scrollbar-thumb{ opacity:1; background:rgba(231,45,126,.7) }
+.inside-card:focus::-webkit-scrollbar-thumb{
+  opacity:1; background:rgba(231,45,126,.7)
+}
 
 /* ===== Stacked script boxes (transparent) ===== */
 :root{
@@ -276,76 +356,63 @@
   --sb-label-fz: clamp(11px, calc(10px + 0.35vw), 13px);
 }
 .script-grid{ display:flex !important; flex-direction:column !important; gap:var(--sb-gap) !important }
-.script-box{ background:transparent !important; border:none !important; box-shadow:none !important; padding:var(--sb-pad); margin:0; width:100%; max-width:100%; content-visibility:auto; contain-intrinsic-size:220px }
+.script-box{
+  background:transparent !important; border:none !important; box-shadow:none !important;
+  padding:var(--sb-pad); margin:0; width:100%; max-width:100%; content-visibility:auto; contain-intrinsic-size:220px
+}
 .script-box__label{
-  display:inline-block; padding:clamp(4px,.6vw,6px) clamp(8px,1.4vw,12px); margin-bottom:clamp(6px,1.2vw,10px);
-  font-size:var(--sb-label-fz); font-weight:800; letter-spacing:.6px; color:#0b0114; border:0 !important; border-radius:999px;
-  background:linear-gradient(135deg, #8B6EF6, #6AA8FF);
+  display:inline-block; padding:clamp(4px,.6vw,6px) clamp(8px,1.4vw,12px);
+  margin-bottom:clamp(6px,1.2vw,10px); font-size:var(--sb-label-fz); font-weight:800; letter-spacing:.6px;
+  color:#0b0114; border:0 !important; border-radius:999px; background:linear-gradient(135deg, #8B6EF6, #6AA8FF);
 }
 .script-box__content{ color:#E9E9FF; font-size:var(--sb-fz); line-height:1.6; word-break:break-word; overflow-wrap:anywhere }
 
 /* ======== DESKTOP BOOST: bigger/taller card ======== */
 @media (min-width: 981px) {
   /* reserve more room so header never overlaps the fixed card */
-  .content-wrapper{
-    padding-bottom: clamp(300px, 58vh, 820px);
-  }
+  .content-wrapper{ padding-bottom: clamp(300px, 58vh, 820px); }
 
   /* wider & taller docked card */
   .foreground-card{
-    width: min(96%, 1500px);
-    padding: 1.3rem 1.2rem;
-    min-height: clamp(420px, 85vh, 2000px);
+    width: min(96%, 1500px); padding: 1.3rem 1.2rem; min-height: clamp(420px, 85vh, 2000px);
   }
 
   /* taller reading window inside the card */
-  .inside-card{
-    max-height: clamp(320px, 62vh, 760px);
-  }
+  .inside-card{ max-height: clamp(320px, 62vh, 760px); }
 }
 
-/* ---------------------------------------------------
-   AUTO "FLOW MODE" FOR TIGHT HEIGHTS (phones/keyboard)
-   If the viewport height is small, we stop fixing the
-   card to the bottom so it no longer collides with the
-   header. Everything becomes natural flow & scroll.
-   --------------------------------------------------- */
-
-/* iPhones & tight screens (portrait, small height) */
-@media (max-height: 720px), (max-width: 420px) {
+/* ============================================================
+   MOBILE FIX: Prevent header collision — undock the card on ≤980px
+   ============================================================ */
+@media (max-width: 980px){
+  /* No need to reserve bottom space when card is not fixed */
   .content-wrapper{
-    padding-bottom: 16px;             /* no big reserve needed */
-    min-height: auto;
+    padding-bottom: 12px !important;
   }
+
+  /* Let the card flow as a normal section (no overlap with header) */
   .foreground-card{
-    position: static;                  /* ← key: no longer fixed */
-    transform: none;
-    bottom: auto;
-    width: min(96%, 760px);
-    margin: 8px auto 16px;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+    position: static !important;
+    left: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+
+    width: min(96%, 760px) !important;
+    margin: 8px var(--header-pad-x) 0 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 6px 24px rgba(0,0,0,.35) !important;
   }
+
+  /* Let content grow naturally */
   .inside-card{
-    max-height: 56vh;                  /* scroll inside, but leave room above/below */
+    max-height: none !important;
+    min-height: 220px !important;
   }
-  /* keep the controls visible but not overlapping */
-  .buttons{
-    position: sticky;
-    bottom: max(8px, env(safe-area-inset-bottom, 8px));
-    z-index: 5;
-    backdrop-filter: blur(10px);
-  }
+
+  .buttons{ width:100% !important; }
 }
 
-/* Landscape phones or split-screen (very short height) */
-@media (max-height: 560px) {
-  .inside-card{ max-height: 48vh; }
-}
-
-/* When the on-screen keyboard shrinks the viewport on mobile */
-@supports (height: 100dvh) {
-  @media (max-height: 720px) {
-    .inside-card{ max-height: calc(100dvh - 220px); }
-  }
+/* Tiny phones: tighter margins */
+@media (max-width: 420px){
+  .foreground-card{ margin: 6px 12px 0 !important; }
 }
