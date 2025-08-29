@@ -2,14 +2,15 @@
 import React, { useEffect, useState } from "react";
 import "./PlansPage.css";
 import { useNavigate } from "react-router-dom";
-import { auth } from "../firebase"; // ✅ no direct Firestore writes
+import { auth } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 /**
  * PlansPage — hosted checkout + pending/confirmed flow
  * - Pro/Premium: mark PENDING only, then redirect to Paddle Hosted Checkout
  * - Basic: call backend /api/select-basic/ (does not re-grant if already claimed)
  * - UI:
- *    • "Current" when CONFIRMED matches the plan
+ *    • "Current" when CONFIRMED matches the plan (scoped to current UID)
  *    • "Pending…" when PENDING matches the plan (and not yet confirmed)
  */
 
@@ -37,8 +38,10 @@ const PRICES = {
   Premium: { amount: "16.69", period: "/mo" },
 };
 
+// 🔐 Local storage keys (scoped by OWNER_KEY)
 const CONFIRMED_KEY = "cf_selected_plan_confirmed";
 const PENDING_KEY = "cf_pending_plan";
+const OWNER_KEY = "cf_plan_owner_uid";
 
 // Paddle Hosted Checkout (sandbox)
 const HOSTED_CHECKOUT_BASE = {
@@ -55,6 +58,22 @@ function safeBtoa(str) {
     return btoa(unescape(encodeURIComponent(str)));
   } catch {
     return btoa(str);
+  }
+}
+
+const VALID_PLANS = ["Basic", "Pro", "Premium"];
+const isValidPlan = (p) => VALID_PLANS.includes(p);
+
+// Read a localStorage value only if it belongs to this UID
+function readScoped(key, uid) {
+  try {
+    if (!uid) return null;
+    const owner = localStorage.getItem(OWNER_KEY);
+    if (owner !== uid) return null;
+    const v = localStorage.getItem(key) || null;
+    return isValidPlan(v) ? v : null;
+  } catch {
+    return null;
   }
 }
 
@@ -83,33 +102,41 @@ function buildCheckoutUrl(plan) {
 export default function PlansPage() {
   const navigate = useNavigate();
 
-  const [confirmedPlan, setConfirmedPlan] = useState(() => {
-    try {
-      return localStorage.getItem(CONFIRMED_KEY) || null;
-    } catch {
-      return null;
-    }
-  });
+  // Track current UID so we can scope localStorage correctly
+  const [ownerUid, setOwnerUid] = useState(auth.currentUser?.uid || null);
 
-  const [pendingPlan, setPendingPlan] = useState(() => {
-    try {
-      return localStorage.getItem(PENDING_KEY) || null;
-    } catch {
-      return null;
-    }
-  });
+  // These will be loaded *after* we know ownerUid
+  const [confirmedPlan, setConfirmedPlan] = useState(null);
+  const [pendingPlan, setPendingPlan] = useState(null);
 
+  // Keep owner UID synced with auth state
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      const uid = u?.uid || null;
+      setOwnerUid(uid);
+    });
+    return unsub;
+  }, []);
+
+  // When ownerUid changes (login/logout), re-read scoped storage
+  useEffect(() => {
+    setConfirmedPlan(readScoped(CONFIRMED_KEY, ownerUid));
+    setPendingPlan(readScoped(PENDING_KEY, ownerUid));
+  }, [ownerUid]);
+
+  // Update if another tab updates these keys (and when owner key changes)
   useEffect(() => {
     const onStorage = (e) => {
-      if (e.key === CONFIRMED_KEY || e.key === PENDING_KEY) {
-        setConfirmedPlan(localStorage.getItem(CONFIRMED_KEY) || null);
-        setPendingPlan(localStorage.getItem(PENDING_KEY) || null);
+      if (e.key === CONFIRMED_KEY || e.key === PENDING_KEY || e.key === OWNER_KEY) {
+        setConfirmedPlan(readScoped(CONFIRMED_KEY, ownerUid));
+        setPendingPlan(readScoped(PENDING_KEY, ownerUid));
       }
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, []);
+  }, [ownerUid]);
 
+  // If both are set and equal (e.g., payment just confirmed), drop pending
   useEffect(() => {
     if (pendingPlan && confirmedPlan && pendingPlan === confirmedPlan) {
       try {
@@ -120,6 +147,9 @@ export default function PlansPage() {
   }, [pendingPlan, confirmedPlan]);
 
   const handleSelect = async (plan) => {
+    if (!isValidPlan(plan)) return;
+
+    // BASIC (free) — requires login to claim safely
     if (plan === "Basic") {
       const user = auth.currentUser;
       if (!user) {
@@ -127,7 +157,7 @@ export default function PlansPage() {
         return;
       }
 
-      // ✅ Call backend to safely set Basic (no re-grant if already claimed)
+      // Call backend to set Basic; backend must guard against re-granting
       try {
         await fetch(`${API_BASE}/api/select-basic/`, {
           method: "POST",
@@ -138,7 +168,9 @@ export default function PlansPage() {
         console.warn("select-basic failed:", e);
       }
 
+      // Write scoped "confirmed"
       try {
+        localStorage.setItem(OWNER_KEY, user.uid);
         localStorage.setItem(CONFIRMED_KEY, "Basic");
         localStorage.removeItem(PENDING_KEY);
       } catch {}
@@ -149,7 +181,7 @@ export default function PlansPage() {
       return;
     }
 
-    // Paid plans
+    // PAID plans (Pro/Premium)
     const user = auth.currentUser;
     if (!user) {
       alert("Please sign in first.");
@@ -157,7 +189,9 @@ export default function PlansPage() {
       return;
     }
 
+    // Mark pending for THIS uid
     try {
+      localStorage.setItem(OWNER_KEY, user.uid);
       localStorage.setItem(PENDING_KEY, plan);
     } catch {}
     setPendingPlan(plan);
@@ -170,12 +204,12 @@ export default function PlansPage() {
     window.location.href = url;
   };
 
-  const isCurrent = (plan) => confirmedPlan === plan;
-  const isPending = (plan) => pendingPlan === plan && confirmedPlan !== plan;
+  const isCurrent = (p) => confirmedPlan === p;
+  const isPending = (p) => pendingPlan === p && confirmedPlan !== p;
 
   return (
     <div className="cf-plans">
-      {/* Back to home — ONLY ADDITION */}
+      {/* Back to home */}
       <button
         className="cf-plans__back"
         onClick={() => navigate("/")}
@@ -193,20 +227,20 @@ export default function PlansPage() {
       </p>
 
       <div className="cf-plans__grid">
-        {["Basic", "Pro", "Premium"].map((plan) => {
-          const price = PRICES[plan];
+        {VALID_PLANS.map((p) => {
+          const price = PRICES[p];
           return (
             <article
-              key={plan}
-              className={`cf-plan ${plan === "Pro" ? "cf-plan--pro" : ""} cf-plan--${plan.toLowerCase()}`}
-              aria-label={`${plan} plan`}
+              key={p}
+              className={`cf-plan ${p === "Pro" ? "cf-plan--pro" : ""} cf-plan--${p.toLowerCase()}`}
+              aria-label={`${p} plan`}
             >
-              {plan === "Pro" && <div className="cf-plan__flag">Most popular</div>}
+              {p === "Pro" && <div className="cf-plan__flag">Most popular</div>}
 
               <div className="cf-plan__nameRow">
-                <h2 className="cf-plan__name">{plan}</h2>
-                {isCurrent(plan) && <span className="cf-plan__chip">Current</span>}
-                {isPending(plan) && <span className="cf-plan__chip cf-plan__chip--pending">Pending…</span>}
+                <h2 className="cf-plan__name">{p}</h2>
+                {isCurrent(p) && <span className="cf-plan__chip">Current</span>}
+                {isPending(p) && <span className="cf-plan__chip cf-plan__chip--pending">Pending…</span>}
               </div>
 
               <div className="cf-plan__price">
@@ -216,7 +250,7 @@ export default function PlansPage() {
               </div>
 
               <ul className="cf-plan__features">
-                {planFeatures[plan].map((f, i) => (
+                {planFeatures[p].map((f, i) => (
                   <li key={i} className={f.good ? "good" : "bad"}>
                     <span className="dot" />
                     {f.text}
@@ -225,11 +259,11 @@ export default function PlansPage() {
               </ul>
 
               <button
-                className={`cf-plan__cta ${plan !== "Basic" ? "cf-plan__cta--grad" : ""}`}
-                disabled={isCurrent(plan)}
-                onClick={() => handleSelect(plan)}
+                className={`cf-plan__cta ${p !== "Basic" ? "cf-plan__cta--grad" : ""}`}
+                disabled={isCurrent(p)}
+                onClick={() => handleSelect(p)}
               >
-                {isCurrent(plan) ? "Selected" : plan === "Basic" ? "Get started" : "Choose plan"}
+                {isCurrent(p) ? "Selected" : p === "Basic" ? "Get started" : "Choose plan"}
               </button>
             </article>
           );
