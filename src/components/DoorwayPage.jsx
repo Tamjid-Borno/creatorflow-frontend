@@ -30,23 +30,19 @@ function DoorwayPage() {
     if (!text) return "";
     return String(text)
       .replace(/\r\n?/g, "\n")
-      // normalize labels (and common typo)
       .replace(/^\s*hok\s*:/gim, "Hook:")
       .replace(/^\s*hook\s*:/gim, "Hook:")
       .replace(/^\s*body\s*:/gim, "Body:")
       .replace(/^\s*cta\s*:/gim, "CTA:")
-      // ensure paragraph breaks and visual labels
       .replace(/\s*Hook:/gi, "\n\n**Hook:**")
       .replace(/\s*Body:/gi, "\n\n**Body:**")
       .replace(/\s*CTA:/gi, "\n\n**CTA:**")
-      // collapse 3+ newlines to exactly two
       .replace(/\n{3,}/g, "\n\n")
-      // trim trailing junk
       .replace(/(?:\s*\bundefined\b\s*)+$/i, "")
       .trim();
   };
 
-  // 🔎 Parse sections like **Hook:** ... **Body:** ... **CTA:**
+  // Parse sections like **Hook:** ... **Body:** ... **CTA:**
   const parseScriptSections = (md) => {
     if (!md) return null;
     const rx = /\*\*(Hook|Body|CTA):\*\*([\s\S]*?)(?=\n{2,}\*\*(?:Hook|Body|CTA):\*\*|\s*$)/gi;
@@ -58,7 +54,7 @@ function DoorwayPage() {
     return out.length ? out : null;
   };
 
-  // auth + initial user doc
+  // Auth + initial user doc
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
@@ -70,9 +66,7 @@ function DoorwayPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ uid: currentUser.uid, email: currentUser.email }),
         });
-      } catch {
-        /* ignore refresh errors here */
-      }
+      } catch {}
 
       const snap = await getDoc(doc(db, "users", currentUser.uid));
       if (snap.exists()) {
@@ -87,25 +81,34 @@ function DoorwayPage() {
     return () => unsub();
   }, []);
 
-  // gooey bg
+  // Softer, more efficient interactive glow (and disabled if reduced-motion)
   useEffect(() => {
     const node = interactiveRef.current;
     if (!node) return;
 
+    const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) {
+      node.style.display = "none";
+      return;
+    }
+
     let curX = 0, curY = 0, tgX = 0, tgY = 0, raf;
     const move = () => {
-      curX += (tgX - curX) / 20;
-      curY += (tgY - curY) / 20;
+      curX += (tgX - curX) / 18;
+      curY += (tgY - curY) / 18;
       node.style.transform = `translate(${Math.round(curX)}px, ${Math.round(curY)}px)`;
       raf = requestAnimationFrame(move);
     };
-    const onMouseMove = (e) => { tgX = e.clientX; tgY = e.clientY; };
+    const onPointerMove = (e) => {
+      tgX = e.clientX;
+      tgY = e.clientY;
+    };
 
-    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
     move();
 
     return () => {
-      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("pointermove", onPointerMove);
       cancelAnimationFrame(raf);
     };
   }, []);
@@ -119,7 +122,7 @@ function DoorwayPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ uid: user.uid, email: user.email }),
       });
-    } catch { /* ignore */ }
+    } catch {}
 
     const userRef = doc(db, "users", user.uid);
     const freshSnap = await getDoc(userRef);
@@ -162,18 +165,19 @@ function DoorwayPage() {
       const data = await resp.json();
       const fullText = cleanScript(data.response || "Error: No response from backend.");
 
-      // Typewriter effect
       let i = 0;
-      const interval = setInterval(() => {
+      const step = () => {
         const ch = fullText[i];
         if (ch !== undefined) setGeneratedText((prev) => prev + ch);
         i += 1;
-        if (i >= fullText.length) {
-          clearInterval(interval);
-          setGeneratedText((prev) => cleanScript(prev)); // final tidy
+        if (i < fullText.length) {
+          requestAnimationFrame(step);
+        } else {
+          setGeneratedText((prev) => cleanScript(prev));
           setIsThinking(false);
         }
-      }, 20);
+      };
+      requestAnimationFrame(step);
 
       // credit update
       const newCredits = Math.max(0, effectiveCredits - 10);
@@ -209,7 +213,6 @@ function DoorwayPage() {
       .catch((err) => console.error("Failed to copy: ", err));
   };
 
-  // Build sections ONLY after generation completes (avoid flicker mid-type)
   const sections = useMemo(
     () => (!isThinking ? parseScriptSections(generatedText) : null),
     [generatedText, isThinking]
@@ -232,6 +235,7 @@ function DoorwayPage() {
       <div className="gradient-bg">
         <svg xmlns="http://www.w3.org/2000/svg">
           <defs>
+            {/* Keep the filter id for compatibility, but we primarily use plain blur for perf */}
             <filter id="goo">
               <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
               <feColorMatrix
@@ -277,7 +281,6 @@ function DoorwayPage() {
               </p>
             )}
 
-            {/* Show flowing markdown while generating; switch to section boxes when done */}
             {(!sections || isThinking) ? (
               <ReactMarkdown>{generatedText || ""}</ReactMarkdown>
             ) : (
@@ -297,7 +300,6 @@ function DoorwayPage() {
               </div>
             )}
 
-            {/* Hidden copy source preserves full text */}
             <pre ref={preRef} style={{ display: "none" }}>{generatedText}</pre>
           </div>
 
