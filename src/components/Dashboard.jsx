@@ -27,7 +27,7 @@ import { IoTimeOutline } from "react-icons/io5";
 
 import "./Dashboard.css";
 
-const REFILL_WINDOW_MS = 24 * 60 * 60 * 1000; // 24h
+const REFILL_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 function toDateMaybe(v) {
   if (!v) return null;
@@ -57,35 +57,49 @@ function formatDateShort(d) {
   }
 }
 
+// very-safe markdown→plain preview for the cards (modal still uses Markdown)
+function mdPreview(s, max = 900) {
+  if (!s) return "";
+  let t = String(s);
+  // Strip images/links/code/headers/emphasis/quotes
+  t = t.replace(/!\[[^\]]*]\([^)]+\)/g, "")
+       .replace(/\[[^\]]*]\([^)]+\)/g, "$1")
+       .replace(/`{1,3}[\s\S]*?`{1,3}/g, "")
+       .replace(/^#+\s+/gm, "")
+       .replace(/[*_~>]+/g, " ")
+       .replace(/\n{3,}/g, "\n\n")
+       .trim();
+  if (t.length > max) t = t.slice(0, max).trimEnd() + "…";
+  return t;
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  // Auth state
+  // auth
   const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState(null);
 
-  // User doc state
+  // user doc
   const [plan, setPlan] = useState(null);
   const [credits, setCredits] = useState(null);
   const [creditDepletedAt, setCreditDepletedAt] = useState(null);
 
-  // Refill countdown
+  // refill ticker
   const [countdownMs, setCountdownMs] = useState(0);
   const tickRef = useRef(null);
 
-  // Scripts state (realtime)
+  // scripts
   const [scripts, setScripts] = useState([]);
   const [scriptsLoading, setScriptsLoading] = useState(true);
   const [subKey, setSubKey] = useState(0); // manual refresh
 
-  // Filters
+  // ui
   const [search, setSearch] = useState("");
-
-  // Modal (full view)
   const [viewOpen, setViewOpen] = useState(false);
   const [viewScript, setViewScript] = useState(null);
 
-  // ===== AUTH: determine user once, then mark ready =====
+  // --- AUTH ---
   useEffect(() => {
     const off = onAuthStateChanged(auth, (u) => {
       setUser(u || null);
@@ -94,12 +108,12 @@ export default function Dashboard() {
     return () => off();
   }, []);
 
-  // Redirect only after auth is known
+  // redirect only after we know auth state
   useEffect(() => {
     if (authReady && !user) navigate("/signup", { replace: true });
   }, [authReady, user, navigate]);
 
-  // ===== USER DOC subscription (plan/credits) =====
+  // --- USER DOC ---
   useEffect(() => {
     if (!user) return;
     const ref = doc(db, "users", user.uid);
@@ -117,7 +131,7 @@ export default function Dashboard() {
     return () => off();
   }, [user?.uid]);
 
-  // ===== REFILL COUNTDOWN =====
+  // --- REFILL COUNTDOWN ---
   useEffect(() => {
     if (!(credits === 0 && creditDepletedAt instanceof Date)) {
       setCountdownMs(0);
@@ -135,7 +149,7 @@ export default function Dashboard() {
     };
   }, [credits, creditDepletedAt]);
 
-  // ===== SCRIPTS subscription (realtime) =====
+  // --- SCRIPTS SUB ---
   useEffect(() => {
     if (!user) return;
     setScriptsLoading(true);
@@ -146,14 +160,15 @@ export default function Dashboard() {
       (snap) => {
         const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
         setScripts(rows);
-        setScriptsLoading(false);
+        // slight microtask delay prevents a rare paint gap after route nav
+        Promise.resolve().then(() => setScriptsLoading(false));
       },
       () => setScriptsLoading(false)
     );
     return () => off();
   }, [user?.uid, subKey]);
 
-  // Derived
+  // derived
   const filteredScripts = useMemo(() => {
     if (!search.trim()) return scripts;
     const q = search.toLowerCase();
@@ -170,7 +185,7 @@ export default function Dashboard() {
   const totalCount = scripts.length;
   const showingCount = filteredScripts.length;
 
-  // Actions
+  // actions
   const toast = (msg) => {
     const el = document.createElement("div");
     el.className = "dash-toast";
@@ -195,7 +210,6 @@ export default function Dashboard() {
       }
     } catch (e) {
       alert("Failed to delete. Please try again.");
-      // eslint-disable-next-line no-console
       console.error(e);
     }
   };
@@ -212,7 +226,7 @@ export default function Dashboard() {
   };
   const refreshScripts = () => setSubKey((k) => k + 1);
 
-  // Modal helpers
+  // modal helpers
   const openView = (script) => {
     setViewScript(script);
     setViewOpen(true);
@@ -225,11 +239,11 @@ export default function Dashboard() {
   const planHue = plan === "Premium" ? "cyan" : plan === "Pro" ? "violet" : "slate";
   const showCountdown = credits === 0 && countdownMs > 0;
 
+  // ====== RENDER ======
   return (
     <div className="dash">
-      {/* Header */}
       <header className="dash__header">
-        <div className="dash__hello">
+        <div>
           <h1 className="dash__title">
             {user ? `Hey, ${user.displayName || user.email || "there"} 👋` : "Dashboard"}
           </h1>
@@ -237,7 +251,7 @@ export default function Dashboard() {
         </div>
 
         <div className="dash__headActions">
-          <button className="btn btn--ghost" onClick={refreshScripts} disabled={scriptsLoading}>
+          <button className="btn btn--ghost" onClick={refreshScripts} disabled={scriptsLoading || !authReady}>
             <FiRefreshCcw />
             <span>Refresh</span>
           </button>
@@ -248,15 +262,14 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* KPI cards */}
       <section className="dash__kpis">
-        <article className={`kpi kpi--${planHue}`} role="status" aria-live="polite">
+        <article className={`kpi kpi--${planHue}`}>
           <div className="kpi__label">Subscription</div>
           <div className="kpi__value">{plan || "—"}</div>
           <button className="kpi__cta" onClick={() => navigate("/plans")}>Manage</button>
         </article>
 
-        <article className="kpi kpi--credits" role="status" aria-live="polite">
+        <article className="kpi kpi--credits">
           <div className="kpi__label">Credits</div>
           <div className="kpi__value">{credits ?? "…"}</div>
           <div className="kpi__sub">
@@ -280,7 +293,6 @@ export default function Dashboard() {
         </article>
       </section>
 
-      {/* Search + Count */}
       <section className="dash__searchRow">
         <div className="search">
           <FiSearch className="search__icon" />
@@ -299,60 +311,56 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {/* Scripts */}
-      <section className="dash__scripts">
-        {scriptsLoading ? (
-          <div className="dash__loading">Loading…</div>
-        ) : filteredScripts.length === 0 ? (
-          <div className="dash__empty">
-            <p>No scripts yet.</p>
-            <button className="btn btn--primary" onClick={() => navigate("/target")}>
-              <FiPlus />
-              <span>Generate your first</span>
-            </button>
-          </div>
-        ) : (
-          <div className="grid">
-            {filteredScripts.map((s) => {
-              const created = toDateMaybe(s.createdAt) || null;
-              return (
-                <article key={s.id} className="card">
-                  <header className="card__head">
-                    <div className="card__date">{created ? formatDateShort(created) : "—"}</div>
-                    <div className="card__tags">
-                      {s.niche && <span className="tag">{s.niche}</span>}
-                      {s.subCategory && <span className="tag tag--muted">{s.subCategory}</span>}
-                      {s.tone && <span className="tag tag--tone">{s.tone}</span>}
-                    </div>
-                  </header>
+      {/* Gate on authReady & scriptsLoading to avoid blank edge-cases */}
+      {!authReady || scriptsLoading ? (
+        <div className="dash__loading">Loading…</div>
+      ) : filteredScripts.length === 0 ? (
+        <div className="dash__empty">
+          <p>No scripts yet.</p>
+          <button className="btn btn--primary" onClick={() => navigate("/target")}>
+            <FiPlus />
+            <span>Generate your first</span>
+          </button>
+        </div>
+      ) : (
+        <div className="grid" key={`${totalCount}:${subKey}`}>
+          {filteredScripts.map((s) => {
+            const created = toDateMaybe(s.createdAt) || null;
+            return (
+              <article key={s.id} className="card">
+                <header className="card__head">
+                  <div className="card__date">{created ? formatDateShort(created) : "—"}</div>
+                  <div className="card__tags">
+                    {s.niche && <span className="tag">{s.niche}</span>}
+                    {s.subCategory && <span className="tag tag--muted">{s.subCategory}</span>}
+                    {s.tone && <span className="tag tag--tone">{s.tone}</span>}
+                  </div>
+                </header>
 
-                  <button className="card__body" onClick={() => openView(s)} title="View full">
-                    <div className="card__preview">
-                      <ReactMarkdown>{String(s.text || "").slice(0, 1200)}</ReactMarkdown>
-                    </div>
-                    <div className="card__fade" aria-hidden="true" />
+                <button className="card__body" onClick={() => openView(s)} title="View full">
+                  <div className="card__preview">{mdPreview(s.text)}</div>
+                  <div className="card__fade" aria-hidden="true" />
+                </button>
+
+                <footer className="card__foot">
+                  <button className="tool" onClick={() => handleCopy(s.text)} title="Copy">
+                    <FiCopy />
+                    <span>Copy</span>
                   </button>
-
-                  <footer className="card__foot">
-                    <button className="tool" onClick={() => handleCopy(s.text)} title="Copy">
-                      <FiCopy />
-                      <span>Copy</span>
-                    </button>
-                    <button className="tool" onClick={() => openView(s)} title="View full">
-                      <FiMaximize2 />
-                      <span>View</span>
-                    </button>
-                    <button className="tool tool--danger" onClick={() => handleDelete(s.id)} title="Delete">
-                      <FiTrash2 />
-                      <span>Delete</span>
-                    </button>
-                  </footer>
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </section>
+                  <button className="tool" onClick={() => openView(s)} title="View full">
+                    <FiMaximize2 />
+                    <span>View</span>
+                  </button>
+                  <button className="tool tool--danger" onClick={() => handleDelete(s.id)} title="Delete">
+                    <FiTrash2 />
+                    <span>Delete</span>
+                  </button>
+                </footer>
+              </article>
+            );
+          })}
+        </div>
+      )}
 
       {/* Full-view modal */}
       {viewOpen && viewScript && (
@@ -386,6 +394,7 @@ export default function Dashboard() {
             </header>
 
             <div className="dash-modal__body">
+              {/* Markdown stays in the modal */}
               <ReactMarkdown>{String(viewScript.text || "")}</ReactMarkdown>
             </div>
 
