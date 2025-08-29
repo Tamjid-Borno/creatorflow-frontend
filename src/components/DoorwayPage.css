@@ -293,9 +293,9 @@
 
   /* wider & taller docked card */
   .foreground-card{
-    width: min(96%, 1240px);
+    width: min(96%, 1500px);
     padding: 1.3rem 1.2rem;
-    min-height: clamp(320px, 64vh, 860px);
+    min-height: clamp(420px, 85vh, 2000px);
   }
 
   /* taller reading window inside the card */
