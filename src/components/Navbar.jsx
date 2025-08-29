@@ -173,8 +173,12 @@ const Navbar = () => {
         <span className="cr">{crTxt}</span>
 
         {showCountdown && (
-          <span className={`refill-badge ${countdownMs < 3600_000 ? 'refill-soon' : ''}`} title="Auto-refill in 24h from depletion">
+          <span
+            className={`refill-badge ${countdownMs < 3600_000 ? 'refill-soon' : ''}`}
+            title="Auto-refill in 24h from depletion"
+          >
             <IonIcon icon={timeOutline} aria-hidden="true" />
+            {/* Keep text visible on mobile/drawer; CSS will only hide it on mid widths in the top bar */}
             <span className="refill-text">Refills in {cdText}</span>
           </span>
         )}
@@ -203,10 +207,10 @@ const Navbar = () => {
           <span className="navbar-brand-text">CreatorFlow</span>
         </button>
 
-        {/* Center (auto-shrinks / hides at ≤1200px) */}
+        {/* Center */}
         <PrimaryLinks />
 
-        {/* Right */}
+        {/* Right cluster (sticks to far right) */}
         <div className="auth-desktop">
           <PlanChip inline />
 
@@ -233,7 +237,7 @@ const Navbar = () => {
             </button>
           )}
 
-          {/* Hamburger (visible on tablet/mobile) */}
+          {/* Hamburger — always last so it pins to the right edge when visible */}
           <button
             className="hamburger"
             onClick={toggleMenu}
