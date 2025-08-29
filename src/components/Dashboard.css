@@ -56,6 +56,8 @@
 .dash__headActions {
   display: inline-flex;
   gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 /* ===== Buttons ===== */
@@ -159,7 +161,7 @@
 
 .kpi--credits .kpi__value{ color: #ffffff; }
 .kpi--quick .kpi__value{ color: #ffffff; }
-.kpi__quickRow{ display:flex; gap:8px; margin-top:8px; }
+.kpi__quickRow{ display:flex; gap:8px; margin-top:8px; flex-wrap: wrap; }
 .pill{
   padding: 8px 12px;
   border-radius: 999px;
@@ -179,6 +181,7 @@
   border: 1px solid rgba(255,255,255,.16);
   background: rgba(255,255,255,.08);
   font-weight: 800;
+  white-space: nowrap;
 }
 .refill-chip--soon{
   background: rgba(255,106,190,.12);
@@ -207,21 +210,6 @@
 }
 
 /* ===== Script cards ===== */
-.dash__scripts { }
-
-.dash__loading{
-  padding: 24px;
-  opacity: .9;
-}
-
-.dash__empty{
-  border: 1px dashed var(--border);
-  background: rgba(255,255,255,.04);
-  border-radius: var(--radius);
-  padding: clamp(18px, 2dvw, 24px);
-  text-align: center;
-}
-
 .grid{
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -250,26 +238,32 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  flex-wrap: wrap; /* tags wrap nicely next to date */
 }
 .card__date{
   font-size: 13px;
   color: #dbe0f2;
   opacity: .9;
+  white-space: nowrap;
 }
 .card__tags{ display: flex; flex-wrap: wrap; gap: 6px; }
 .tag{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 4px 8px;
   border-radius: 999px;
   background: rgba(255,255,255,.08);
   border: 1px solid var(--border);
   font-size: 12px;
+  line-height: 1;
 }
 .tag--muted{ opacity:.85; }
 .tag--tone{
   background: linear-gradient(90deg, rgba(111,77,255,.28), rgba(193,75,255,.28));
   border: 1px solid rgba(193,75,255,.35);
 }
-.tag--date { opacity: .8; }
+.tag--date { opacity: .8; white-space: nowrap; }
 
 .card__body{
   display: block;
@@ -279,20 +273,18 @@
   border: 0;
   cursor: pointer;
 }
-.card__body:focus-visible {
-  outline: 2px solid #ffffff66;
-  border-radius: 10px;
-}
+.card__body:focus-visible { outline: 2px solid #ffffff66; border-radius: 10px; }
 .card__preview{
   color: #f7f7ff;
   opacity: .95;
-  line-height: 1.6;
+  line-height: 1.7;
   max-height: 220px;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 10;
   -webkit-box-orient: vertical;
   position: relative;
+  word-break: break-word;
 }
 .card__fade{
   position: absolute;
@@ -305,6 +297,7 @@
 .card__foot{
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 10px;
 }
 .tool{
@@ -326,11 +319,16 @@
   background: rgba(255,106,190,.18);
 }
 
-/* ===== Load more ===== */
-.dash__more{
-  display: grid; place-items: center;
-  margin-top: 16px;
+/* ===== Load more / empty / loading ===== */
+.dash__loading{ padding: 24px; opacity: .9; }
+.dash__empty{
+  border: 1px dashed var(--border);
+  background: rgba(255,255,255,.04);
+  border-radius: var(--radius);
+  padding: clamp(18px, 2dvw, 24px);
+  text-align: center;
 }
+.dash__more{ display: grid; place-items: center; margin-top: 16px; }
 
 /* ===== Tiny toast for copy ===== */
 .dash-toast{
@@ -348,12 +346,9 @@
   transition: transform .2s ease, opacity .2s ease;
   z-index: 99999;
 }
-.dash-toast.show{
-  transform: translate(-50%, 0);
-  opacity: 1;
-}
+.dash-toast.show{ transform: translate(-50%, 0); opacity: 1; }
 
-/* ===== Full-view Modal ===== */
+/* ===== Full-view Modal (responsive) ===== */
 .dash-modal{
   position: fixed;
   inset: 0;
@@ -373,7 +368,7 @@
   max-height: min(84dvh, 920px);
   display: grid;
   grid-template-rows: auto 1fr auto;
-  gap: 10px;
+  gap: 12px;
 
   background: rgba(255,255,255,.06);
   border: 1px solid var(--border);
@@ -381,62 +376,70 @@
   box-shadow: 0 30px 90px rgba(0,0,0,.55);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  padding: 14px;
+  padding: clamp(12px, 1.6dvw, 16px);
 }
-@media (max-width: 560px){
-  .dash-modal__dialog{
-    width: 96vw;
-    max-height: 90dvh;
-    padding: 10px;
-    border-radius: 14px;
-  }
+@media (max-width: 640px){
+  .dash-modal__dialog{ width: 96vw; max-height: 90dvh; border-radius: 14px; }
 }
 
 .dash-modal__head{
   display: grid;
-  grid-template-columns: 1fr auto auto;
-  align-items: center;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "title close"
+    "meta  close";
+  align-items: start;
   gap: 10px;
 }
-.dash-modal__title{
-  margin: 0;
-  font-size: clamp(18px, 2.8dvw, 22px);
-  font-weight: 800;
-}
+.dash-modal__title{ grid-area: title; margin: 0; font-size: clamp(18px, 2.8dvw, 22px); font-weight: 800; }
 .dash-modal__meta{
-  display: inline-flex;
+  grid-area: meta;
+  display: flex;
+  flex-wrap: wrap;          /* ✅ tags wrap cleanly on small screens */
   gap: 6px;
   align-items: center;
-  justify-content: flex-end;
 }
-.icon-btn{
-  display: inline-grid;
-  place-items: center;
-  width: 36px; height: 36px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,.08);
-  color: #fff;
-  cursor: pointer;
+.icon-btn{ grid-area: close; justify-self: end; align-self: start;
+  display: inline-grid; place-items: center; width: 36px; height: 36px;
+  border-radius: 10px; border: 1px solid var(--border);
+  background: rgba(255,255,255,.08); color: #fff; cursor: pointer;
 }
 .icon-btn:hover{ background: rgba(255,255,255,.14); }
 
 .dash-modal__body{
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 10px;
   border-radius: 10px;
   background: rgba(12, 10, 18, .35);
   border: 1px solid rgba(255,255,255,.08);
   color: #f7f7ff;
   line-height: 1.75;
+  word-break: break-word;     /* ✅ long words never overflow */
 }
-.dash-modal__body h1,
-.dash-modal__body h2,
-.dash-modal__body h3{ margin-top: .6em; }
+.dash-modal__body pre,
+.dash-modal__body code{
+  white-space: pre-wrap;      /* ✅ code blocks wrap on mobile */
+  word-break: break-word;
+}
 
 .dash-modal__foot{
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;            /* ✅ actions wrap instead of breaking layout */
 }
-.dash-modal__foot .spacer{ flex: 1; }
+.dash-modal__foot .spacer{ flex: 1; min-width: 12px; }
+@media (max-width: 560px){
+  .dash-modal__foot{
+    flex-direction: column;   /* ✅ neat vertical stack on phones */
+    align-items: stretch;
+  }
+  .dash-modal__foot .spacer{ display: none; }
+  .dash-modal__foot .btn{ width: 100%; justify-content: center; }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .dash-modal, .btn { transition: none !important; }
+}
