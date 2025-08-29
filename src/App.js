@@ -28,6 +28,7 @@ const About        = lazy(() => import("./components/About"));
 const Terms        = lazy(() => import("./components/Terms"));
 const Contact      = lazy(() => import("./components/Contact"));
 const PrivacyPage  = lazy(() => import("./components/PrivacyPage"));
+const Dashboard    = lazy(() => import("./components/Dashboard")); // ✅ NEW
 
 /* Scroll to top on route change */
 function ScrollToTop() {
@@ -94,6 +95,16 @@ function AppRoot() {
                 <LandingPage />
                 <Facilities />
                 <Testimonials />
+              </Layout>
+            }
+          />
+
+          {/* Dashboard (uses Navbar + Footer) */}
+          <Route
+            path="/dashboard"
+            element={
+              <Layout>
+                <Dashboard />
               </Layout>
             }
           />
