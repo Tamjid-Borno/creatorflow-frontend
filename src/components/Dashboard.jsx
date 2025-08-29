@@ -1,40 +1,48 @@
 // src/components/Dashboard.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
-import {
-  collection,
-  query,
-  orderBy,
-  onSnapshot,
-  doc,
-  deleteDoc,
-} from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth, db } from "../firebase";
-
 import {
   FiSearch,
-  FiCopy,
-  FiTrash2,
   FiRefreshCcw,
   FiPlus,
-  FiMaximize2,
-  FiX,
+  FiCopy,
   FiDownload,
+  FiX,
+  FiTag,
+  FiCalendar,
+  FiUser,
 } from "react-icons/fi";
-import { IoTimeOutline } from "react-icons/io5";
+import { useNavigate } from "react-router-dom";
+
+import { auth, db } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import {
+  collection,
+  doc,
+  getDoc,
+  onSnapshot,
+  orderBy,
+  query,
+  limit,
+  startAfter,
+  getDocs,
+  getCountFromServer,
+} from "firebase/firestore";
 
 import "./Dashboard.css";
 
-const REFILL_WINDOW_MS = 24 * 60 * 60 * 1000;
+const PAGE_SIZE = 12;
+const REFILL_WINDOW_MS = 24 * 60 * 60 * 1000; // 24h
 
-function toDateMaybe(v) {
-  if (!v) return null;
-  if (typeof v?.toDate === "function") return v.toDate();
-  const d = v instanceof Date ? v : new Date(v);
-  return isNaN(d.getTime()) ? null : d;
+function formatDate(ts) {
+  if (!ts) return "—";
+  try {
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleString();
+  } catch {
+    return "—";
+  }
 }
+
 function formatCountdown(ms) {
   if (ms <= 0) return "00:00:00";
   const s = Math.floor(ms / 1000);
@@ -43,245 +51,230 @@ function formatCountdown(ms) {
   const ss = String(s % 60).padStart(2, "0");
   return `${hh}:${mm}:${ss}`;
 }
-function formatDateShort(d) {
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(d);
-  } catch {
-    return d.toLocaleString();
-  }
-}
-
-// very-safe markdown→plain preview for the cards (modal still uses Markdown)
-function mdPreview(s, max = 900) {
-  if (!s) return "";
-  let t = String(s);
-  // Strip images/links/code/headers/emphasis/quotes
-  t = t.replace(/!\[[^\]]*]\([^)]+\)/g, "")
-       .replace(/\[[^\]]*]\([^)]+\)/g, "$1")
-       .replace(/`{1,3}[\s\S]*?`{1,3}/g, "")
-       .replace(/^#+\s+/gm, "")
-       .replace(/[*_~>]+/g, " ")
-       .replace(/\n{3,}/g, "\n\n")
-       .trim();
-  if (t.length > max) t = t.slice(0, max).trimEnd() + "…";
-  return t;
-}
 
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  // auth
-  const [authReady, setAuthReady] = useState(false);
+  // auth / user basics
   const [user, setUser] = useState(null);
-
-  // user doc
   const [plan, setPlan] = useState(null);
   const [credits, setCredits] = useState(null);
-  const [creditDepletedAt, setCreditDepletedAt] = useState(null);
-
-  // refill ticker
+  const [depletedAt, setDepletedAt] = useState(null);
   const [countdownMs, setCountdownMs] = useState(0);
-  const tickRef = useRef(null);
 
   // scripts
   const [scripts, setScripts] = useState([]);
-  const [scriptsLoading, setScriptsLoading] = useState(true);
-  const [subKey, setSubKey] = useState(0); // manual refresh
+  const [totalScripts, setTotalScripts] = useState(0);
+  const lastDocRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  // ui
-  const [search, setSearch] = useState("");
-  const [viewOpen, setViewOpen] = useState(false);
-  const [viewScript, setViewScript] = useState(null);
+  // search & UI
+  const [queryText, setQueryText] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [active, setActive] = useState(null);
+  const [toast, setToast] = useState("");
 
-  // --- AUTH ---
+  // ───────────────────────────────────────────
+  // Auth + User doc
+  // ───────────────────────────────────────────
   useEffect(() => {
-    const off = onAuthStateChanged(auth, (u) => {
+    const off = onAuthStateChanged(auth, async (u) => {
       setUser(u || null);
-      setAuthReady(true);
+      if (!u) return;
+
+      const uref = doc(db, "users", u.uid);
+      const snap = await getDoc(uref);
+      if (snap.exists()) {
+        const d = snap.data() || {};
+        setPlan(
+          d.subscriptionPlan &&
+            ["Basic", "Pro", "Premium"].includes(d.subscriptionPlan)
+            ? d.subscriptionPlan
+            : "Pro"
+        );
+        setCredits(typeof d.credits === "number" ? d.credits : 0);
+        setDepletedAt(d.creditDepletedAt || null);
+      } else {
+        setPlan("Pro");
+        setCredits(0);
+        setDepletedAt(null);
+      }
     });
-    return () => off();
+    return off;
   }, []);
 
-  // redirect only after we know auth state
+  // refill countdown
   useEffect(() => {
-    if (authReady && !user) navigate("/signup", { replace: true });
-  }, [authReady, user, navigate]);
-
-  // --- USER DOC ---
-  useEffect(() => {
-    if (!user) return;
-    const ref = doc(db, "users", user.uid);
-    const off = onSnapshot(ref, (snap) => {
-      if (!snap.exists()) return;
-      const data = snap.data() || {};
-      const p =
-        data.subscriptionPlan && ["Basic", "Pro", "Premium"].includes(data.subscriptionPlan)
-          ? data.subscriptionPlan
-          : null;
-      setPlan(p);
-      setCredits(typeof data.credits === "number" ? data.credits : null);
-      setCreditDepletedAt(toDateMaybe(data.creditDepletedAt));
-    });
-    return () => off();
-  }, [user?.uid]);
-
-  // --- REFILL COUNTDOWN ---
-  useEffect(() => {
-    if (!(credits === 0 && creditDepletedAt instanceof Date)) {
+    if (!(credits === 0 && depletedAt)) {
       setCountdownMs(0);
-      if (tickRef.current) clearInterval(tickRef.current);
-      tickRef.current = null;
       return;
     }
-    const nextRefill = new Date(creditDepletedAt.getTime() + REFILL_WINDOW_MS);
-    const tick = () => setCountdownMs(Math.max(0, nextRefill.getTime() - Date.now()));
-    tick();
-    tickRef.current = setInterval(tick, 1000);
-    return () => {
-      if (tickRef.current) clearInterval(tickRef.current);
-      tickRef.current = null;
+    const nextRefillAt = new Date(
+      (depletedAt.toDate ? depletedAt.toDate() : depletedAt).getTime() +
+        REFILL_WINDOW_MS
+    );
+    const tick = () => {
+      setCountdownMs(Math.max(0, nextRefillAt.getTime() - Date.now()));
     };
-  }, [credits, creditDepletedAt]);
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [credits, depletedAt]);
 
-  // --- SCRIPTS SUB ---
+  // ───────────────────────────────────────────
+  // Scripts (live first page) + count
+  // ───────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
-    setScriptsLoading(true);
-    const ref = collection(db, "users", user.uid, "scripts");
-    const q = query(ref, orderBy("createdAt", "desc"));
-    const off = onSnapshot(
-      q,
+    setLoading(true);
+
+    const base = collection(db, "users", user.uid, "scripts");
+
+    // total count (server aggregate)
+    getCountFromServer(query(base))
+      .then((snap) => setTotalScripts(snap.data().count || 0))
+      .catch(() => setTotalScripts(0));
+
+    // live first page
+    const q1 = query(base, orderBy("createdAt", "desc"), limit(PAGE_SIZE));
+    const unsub = onSnapshot(
+      q1,
       (snap) => {
-        const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setScripts(rows);
-        // slight microtask delay prevents a rare paint gap after route nav
-        Promise.resolve().then(() => setScriptsLoading(false));
+        const docs = [];
+        snap.forEach((d) => docs.push({ id: d.id, ...d.data() }));
+        setScripts(docs);
+        lastDocRef.current = snap.docs[snap.docs.length - 1] || null;
+        setLoading(false);
       },
-      () => setScriptsLoading(false)
+      () => setLoading(false)
     );
-    return () => off();
-  }, [user?.uid, subKey]);
 
-  // derived
-  const filteredScripts = useMemo(() => {
-    if (!search.trim()) return scripts;
-    const q = search.toLowerCase();
-    return scripts.filter((s) => {
-      const text = (s.text || "").toLowerCase();
-      const meta = [s.niche, s.subCategory, s.followerCount, s.tone, s.moreSpecific]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return text.includes(q) || meta.includes(q);
-    });
-  }, [scripts, search]);
+    return unsub;
+  }, [user]);
 
-  const totalCount = scripts.length;
-  const showingCount = filteredScripts.length;
-
-  // actions
-  const toast = (msg) => {
-    const el = document.createElement("div");
-    el.className = "dash-toast";
-    el.textContent = msg;
-    document.body.appendChild(el);
-    setTimeout(() => el.classList.add("show"));
-    setTimeout(() => {
-      el.classList.remove("show");
-      setTimeout(() => el.remove(), 250);
-    }, 1200);
-  };
-  const handleCopy = (txt) =>
-    navigator.clipboard.writeText(String(txt || "")).then(() => toast("Copied ✔"));
-  const handleDelete = async (id) => {
-    if (!user) return;
-    if (!window.confirm("Delete this script permanently?")) return;
+  // load more
+  const handleLoadMore = async () => {
+    if (!user || !lastDocRef.current) return;
+    setLoadingMore(true);
     try {
-      await deleteDoc(doc(db, "users", user.uid, "scripts", id));
-      if (viewOpen && viewScript?.id === id) {
-        setViewOpen(false);
-        setViewScript(null);
-      }
-    } catch (e) {
-      alert("Failed to delete. Please try again.");
-      console.error(e);
+      const base = collection(db, "users", user.uid, "scripts");
+      const q2 = query(
+        base,
+        orderBy("createdAt", "desc"),
+        startAfter(lastDocRef.current),
+        limit(PAGE_SIZE)
+      );
+      const snap = await getDocs(q2);
+      const more = [];
+      snap.forEach((d) => more.push({ id: d.id, ...d.data() }));
+      setScripts((prev) => [...prev, ...more]);
+      lastDocRef.current = snap.docs[snap.docs.length - 1] || null;
+    } finally {
+      setLoadingMore(false);
     }
   };
-  const downloadText = (filename, content) => {
-    const blob = new Blob([String(content || "")], { type: "text/plain;charset=utf-8" });
+
+  // simple client search across text + tags
+  const filtered = useMemo(() => {
+    const q = queryText.trim().toLowerCase();
+    if (!q) return scripts;
+    return scripts.filter((s) => {
+      const hay =
+        `${s.text || ""} ${s.niche || ""} ${s.subCategory || ""} ${
+          s.followerCount || ""
+        } ${s.tone || ""}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [scripts, queryText]);
+
+  const openScript = (s) => {
+    setActive(s);
+    setModalOpen(true);
+  };
+  const closeModal = () => setModalOpen(false);
+
+  // copy + tiny toast
+  const copyText = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text || "");
+      setToast("Copied!");
+      setTimeout(() => setToast(""), 1400);
+    } catch {
+      setToast("Copy failed");
+      setTimeout(() => setToast(""), 1400);
+    }
+  };
+
+  const downloadTxt = (s) => {
+    const blob = new Blob([s.text || ""], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = filename || "script.txt";
-    document.body.appendChild(a);
+    a.download = `script-${s.id}.txt`;
     a.click();
-    a.remove();
     URL.revokeObjectURL(url);
   };
-  const refreshScripts = () => setSubKey((k) => k + 1);
 
-  // modal helpers
-  const openView = (script) => {
-    setViewScript(script);
-    setViewOpen(true);
-  };
-  const closeView = () => {
-    setViewOpen(false);
-    setViewScript(null);
-  };
+  if (!user) {
+    return (
+      <div className="dash">
+        <header className="dash__header">
+          <div>
+            <h1 className="dash__title">Dashboard</h1>
+            <p className="dash__subtitle">Please sign in to view your scripts.</p>
+          </div>
+          <div className="dash__headActions">
+            <button className="btn btn--primary" onClick={() => navigate("/signup")}>
+              Sign up
+            </button>
+          </div>
+        </header>
+      </div>
+    );
+    }
 
-  const planHue = plan === "Premium" ? "cyan" : plan === "Pro" ? "violet" : "slate";
-  const showCountdown = credits === 0 && countdownMs > 0;
-
-  // ====== RENDER ======
   return (
     <div className="dash">
+      {/* Header */}
       <header className="dash__header">
         <div>
-          <h1 className="dash__title">
-            {user ? `Hey, ${user.displayName || user.email || "there"} 👋` : "Dashboard"}
-          </h1>
+          <h1 className="dash__title">Hey, {user.displayName || user.email} <span role="img" aria-label="sparkles">✨</span></h1>
           <p className="dash__subtitle">Manage your plan and see every script you generated.</p>
         </div>
-
         <div className="dash__headActions">
-          <button className="btn btn--ghost" onClick={refreshScripts} disabled={scriptsLoading || !authReady}>
-            <FiRefreshCcw />
-            <span>Refresh</span>
+          <button className="btn btn--ghost" onClick={() => window.location.reload()}>
+            <FiRefreshCcw /> Refresh
           </button>
           <button className="btn btn--primary" onClick={() => navigate("/target")}>
-            <FiPlus />
-            <span>New script</span>
+            <FiPlus /> New script
           </button>
         </div>
       </header>
 
+      {/* KPI cards */}
       <section className="dash__kpis">
-        <article className={`kpi kpi--${planHue}`}>
+        <article className="kpi kpi--slate">
           <div className="kpi__label">Subscription</div>
           <div className="kpi__value">{plan || "—"}</div>
-          <button className="kpi__cta" onClick={() => navigate("/plans")}>Manage</button>
+          <div className="kpi__sub">
+            <button className="kpi__cta" onClick={() => navigate("/plans")}>
+              Manage
+            </button>
+          </div>
         </article>
 
         <article className="kpi kpi--credits">
           <div className="kpi__label">Credits</div>
-          <div className="kpi__value">{credits ?? "…"}</div>
-          <div className="kpi__sub">
-            {showCountdown ? (
+          <div className="kpi__value">{credits ?? "—"}</div>
+          {credits === 0 && depletedAt && (
+            <div className={`kpi__sub`}>
               <span className={`refill-chip ${countdownMs < 3600_000 ? "refill-chip--soon" : ""}`}>
-                <IoTimeOutline />
-                <span>Refills in {formatCountdown(countdownMs)}</span>
+                Refills in {formatCountdown(countdownMs)}
               </span>
-            ) : (
-              <span className="kpi__muted">Auto-refills when balance hits 0</span>
-            )}
-          </div>
+            </div>
+          )}
+          {credits > 0 && <div className="kpi__sub">Auto-refills when balance hits 0</div>}
         </article>
 
         <article className="kpi kpi--quick">
@@ -293,136 +286,135 @@ export default function Dashboard() {
         </article>
       </section>
 
+      {/* Search row with count */}
       <section className="dash__searchRow">
         <div className="search">
           <FiSearch className="search__icon" />
           <input
             className="search__input"
-            type="text"
             placeholder="Search your scripts (content or tags)…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={queryText}
+            onChange={(e) => setQueryText(e.target.value)}
           />
         </div>
 
-        <div className="dash__count" aria-live="polite">
-          <span className="count-pill">{showingCount}</span>
-          <span className="count-text">of {totalCount} scripts</span>
+        <div className="dash__count">
+          <span className="count-pill">{filtered.length}</span>
+          <span className="count-text">of {totalScripts} scripts</span>
         </div>
       </section>
 
-      {/* Gate on authReady & scriptsLoading to avoid blank edge-cases */}
-      {!authReady || scriptsLoading ? (
+      {/* Grid */}
+      {loading ? (
         <div className="dash__loading">Loading…</div>
-      ) : filteredScripts.length === 0 ? (
-        <div className="dash__empty">
-          <p>No scripts yet.</p>
-          <button className="btn btn--primary" onClick={() => navigate("/target")}>
-            <FiPlus />
-            <span>Generate your first</span>
-          </button>
-        </div>
+      ) : filtered.length === 0 ? (
+        <div className="dash__empty">No scripts yet. Generate your first one!</div>
       ) : (
-        <div className="grid" key={`${totalCount}:${subKey}`}>
-          {filteredScripts.map((s) => {
-            const created = toDateMaybe(s.createdAt) || null;
-            return (
-              <article key={s.id} className="card">
-                <header className="card__head">
-                  <div className="card__date">{created ? formatDateShort(created) : "—"}</div>
-                  <div className="card__tags">
-                    {s.niche && <span className="tag">{s.niche}</span>}
-                    {s.subCategory && <span className="tag tag--muted">{s.subCategory}</span>}
-                    {s.tone && <span className="tag tag--tone">{s.tone}</span>}
-                  </div>
-                </header>
+        <section className="grid">
+          {filtered.map((s) => (
+            <article className="card" key={s.id}>
+              <header className="card__head">
+                <span className="card__date">
+                  <FiCalendar /> {formatDate(s.createdAt)}
+                </span>
+                <div className="card__tags">
+                  {s.niche && (
+                    <span className="tag">
+                      <FiTag /> {s.niche}
+                    </span>
+                  )}
+                  {s.subCategory && (
+                    <span className="tag tag--muted">
+                      <FiTag /> {s.subCategory}
+                    </span>
+                  )}
+                  {s.tone && (
+                    <span className="tag tag--tone">
+                      <FiUser /> {s.tone}
+                    </span>
+                  )}
+                </div>
+              </header>
 
-                <button className="card__body" onClick={() => openView(s)} title="View full">
-                  <div className="card__preview">{mdPreview(s.text)}</div>
-                  <div className="card__fade" aria-hidden="true" />
+              <button className="card__body" onClick={() => openScript(s)}>
+                <div className="card__preview">
+                  {s.text || ""}
+                  <div className="card__fade" />
+                </div>
+              </button>
+
+              <footer className="card__foot">
+                <button className="tool" onClick={() => copyText(s.text || "")}>
+                  <FiCopy /> Copy
                 </button>
+                <button className="tool" onClick={() => downloadTxt(s)}>
+                  <FiDownload /> Download
+                </button>
+              </footer>
+            </article>
+          ))}
+        </section>
+      )}
 
-                <footer className="card__foot">
-                  <button className="tool" onClick={() => handleCopy(s.text)} title="Copy">
-                    <FiCopy />
-                    <span>Copy</span>
-                  </button>
-                  <button className="tool" onClick={() => openView(s)} title="View full">
-                    <FiMaximize2 />
-                    <span>View</span>
-                  </button>
-                  <button className="tool tool--danger" onClick={() => handleDelete(s.id)} title="Delete">
-                    <FiTrash2 />
-                    <span>Delete</span>
-                  </button>
-                </footer>
-              </article>
-            );
-          })}
+      {/* Load more */}
+      {!loading && lastDocRef.current && (
+        <div className="dash__more">
+          <button className="btn btn--ghost" onClick={handleLoadMore} disabled={loadingMore}>
+            {loadingMore ? "Loading…" : "Load more"}
+          </button>
         </div>
       )}
 
       {/* Full-view modal */}
-      {viewOpen && viewScript && (
-        <div
-          className="dash-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="dash-modal-title"
-          onMouseDown={(e) => {
-            if (e.target.classList.contains("dash-modal")) closeView();
-          }}
-        >
+      {modalOpen && active && (
+        <div className="dash-modal" role="dialog" aria-modal="true" aria-label="Script">
           <div className="dash-modal__dialog">
             <header className="dash-modal__head">
-              <h2 id="dash-modal-title" className="dash-modal__title">Full script</h2>
-
+              <h3 className="dash-modal__title">Script</h3>
               <div className="dash-modal__meta">
-                {viewScript.niche && <span className="tag">{viewScript.niche}</span>}
-                {viewScript.subCategory && <span className="tag tag--muted">{viewScript.subCategory}</span>}
-                {viewScript.tone && <span className="tag tag--tone">{viewScript.tone}</span>}
-                {viewScript.createdAt && (
-                  <span className="tag tag--date">
-                    {formatDateShort(toDateMaybe(viewScript.createdAt))}
+                <span className="tag tag--date">
+                  <FiCalendar /> {formatDate(active.createdAt)}
+                </span>
+                {active.niche && (
+                  <span className="tag">
+                    <FiTag /> {active.niche}
+                  </span>
+                )}
+                {active.subCategory && (
+                  <span className="tag tag--muted">
+                    <FiTag /> {active.subCategory}
+                  </span>
+                )}
+                {active.tone && (
+                  <span className="tag tag--tone">
+                    <FiUser /> {active.tone}
                   </span>
                 )}
               </div>
-
-              <button className="icon-btn" onClick={closeView} aria-label="Close">
+              <button className="icon-btn" onClick={closeModal} aria-label="Close">
                 <FiX />
               </button>
             </header>
 
             <div className="dash-modal__body">
-              {/* Markdown stays in the modal */}
-              <ReactMarkdown>{String(viewScript.text || "")}</ReactMarkdown>
+              <pre>{active.text || ""}</pre>
             </div>
 
             <footer className="dash-modal__foot">
-              <button className="btn btn--ghost" onClick={() => handleCopy(viewScript.text)}>
-                <FiCopy />
-                <span>Copy</span>
-              </button>
-              <button
-                className="btn btn--ghost"
-                onClick={() =>
-                  downloadText(`script-${viewScript.id || "export"}.txt`, viewScript.text || "")
-                }
-              >
-                <FiDownload />
-                <span>Download</span>
-              </button>
-
               <div className="spacer" />
-
-              <button className="btn btn--primary" onClick={closeView}>
-                <FiX />
-                <span>Close</span>
+              <button className="btn btn--ghost" onClick={() => copyText(active.text || "")}>
+                <FiCopy /> Copy
+              </button>
+              <button className="btn btn--primary" onClick={() => downloadTxt(active)}>
+                <FiDownload /> Download
               </button>
             </footer>
           </div>
         </div>
       )}
+
+      {/* tiny toast */}
+      <div className={`dash-toast ${toast ? "show" : ""}`}>{toast}</div>
     </div>
   );
 }
