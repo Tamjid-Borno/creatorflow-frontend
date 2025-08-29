@@ -25,7 +25,6 @@ function DoorwayPage() {
   const location = useLocation();
   const { niche, subCategory, followerCount, tone, moreSpecific } = location.state || {};
 
-  // Normalize + make sections into separate Markdown paragraphs
   const cleanScript = (text) => {
     if (!text) return "";
     return String(text)
@@ -42,19 +41,15 @@ function DoorwayPage() {
       .trim();
   };
 
-  // Parse sections like **Hook:** ... **Body:** ... **CTA:**
   const parseScriptSections = (md) => {
     if (!md) return null;
     const rx = /\*\*(Hook|Body|CTA):\*\*([\s\S]*?)(?=\n{2,}\*\*(?:Hook|Body|CTA):\*\*|\s*$)/gi;
     const out = [];
     let m;
-    while ((m = rx.exec(md)) !== null) {
-      out.push({ key: m[1], content: (m[2] || "").trim() });
-    }
+    while ((m = rx.exec(md)) !== null) out.push({ key: m[1], content: (m[2] || "").trim() });
     return out.length ? out : null;
   };
 
-  // Auth + initial user doc
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
@@ -81,17 +76,15 @@ function DoorwayPage() {
     return () => unsub();
   }, []);
 
-  // Softer, more efficient interactive glow (and disabled if reduced-motion)
+  // soft interactive glow (disabled for reduced motion)
   useEffect(() => {
     const node = interactiveRef.current;
     if (!node) return;
-
     const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced) {
       node.style.display = "none";
       return;
     }
-
     let curX = 0, curY = 0, tgX = 0, tgY = 0, raf;
     const move = () => {
       curX += (tgX - curX) / 18;
@@ -99,18 +92,10 @@ function DoorwayPage() {
       node.style.transform = `translate(${Math.round(curX)}px, ${Math.round(curY)}px)`;
       raf = requestAnimationFrame(move);
     };
-    const onPointerMove = (e) => {
-      tgX = e.clientX;
-      tgY = e.clientY;
-    };
-
+    const onPointerMove = (e) => { tgX = e.clientX; tgY = e.clientY; };
     window.addEventListener("pointermove", onPointerMove, { passive: true });
     move();
-
-    return () => {
-      window.removeEventListener("pointermove", onPointerMove);
-      cancelAnimationFrame(raf);
-    };
+    return () => { window.removeEventListener("pointermove", onPointerMove); cancelAnimationFrame(raf); };
   }, []);
 
   const fetchChatGPT = async () => {
@@ -145,15 +130,8 @@ function DoorwayPage() {
       const resp = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/generate-review/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          niche,
-          subCategory,
-          followerCount,
-          tone,
-          moreSpecific: moreSpecific?.trim() || "",
-        }),
+        body: JSON.stringify({ niche, subCategory, followerCount, tone, moreSpecific: moreSpecific?.trim() || "" }),
       });
-
       if (!resp.ok) {
         const err = await resp.text();
         console.error("Backend error:", err);
@@ -170,33 +148,26 @@ function DoorwayPage() {
         const ch = fullText[i];
         if (ch !== undefined) setGeneratedText((prev) => prev + ch);
         i += 1;
-        if (i < fullText.length) {
-          requestAnimationFrame(step);
-        } else {
+        if (i < fullText.length) requestAnimationFrame(step);
+        else {
           setGeneratedText((prev) => cleanScript(prev));
           setIsThinking(false);
         }
       };
       requestAnimationFrame(step);
 
-      // credit update
       const newCredits = Math.max(0, effectiveCredits - 10);
       const update = { credits: newCredits };
-      if (!effectiveCreditDepletedAt && newCredits === 0) {
-        update.creditDepletedAt = serverTimestamp();
-      }
+      if (!effectiveCreditDepletedAt && newCredits === 0) update.creditDepletedAt = serverTimestamp();
       await updateDoc(userRef, update);
       setCredits(newCredits);
-      if (!effectiveCreditDepletedAt && newCredits === 0) {
-        setCreditDepletedAt("just-stamped");
-      }
+      if (!effectiveCreditDepletedAt && newCredits === 0) setCreditDepletedAt("just-stamped");
     } catch (e) {
       setGeneratedText("Error: " + e.message);
       setIsThinking(false);
     }
   };
 
-  // auto-generate once after credits load
   useEffect(() => {
     if (credits !== null && isFirstRender) {
       fetchChatGPT();
@@ -207,25 +178,17 @@ function DoorwayPage() {
   const handleCopyClick = () => {
     const el = preRef.current;
     const text = el?.innerText || el?.textContent || "";
-    navigator.clipboard
-      .writeText(text)
-      .then(() => alert("Copied to clipboard!"))
-      .catch((err) => console.error("Failed to copy: ", err));
+    navigator.clipboard.writeText(text).then(() => alert("Copied to clipboard!")).catch((err) => console.error("Failed to copy: ", err));
   };
 
-  const sections = useMemo(
-    () => (!isThinking ? parseScriptSections(generatedText) : null),
-    [generatedText, isThinking]
-  );
+  const sections = useMemo(() => (!isThinking ? parseScriptSections(generatedText) : null), [generatedText, isThinking]);
 
   if (!user) {
     return (
       <div className="unauth-wrapper">
         <div>🚫 Access Denied 🚫</div>
         <div>You must be logged in to view this page.</div>
-        <button onClick={() => navigate("/signup")} className="unauth-btn">
-          Go to Sign Up
-        </button>
+        <button onClick={() => navigate("/signup")} className="unauth-btn">Go to Sign Up</button>
       </div>
     );
   }
@@ -235,39 +198,24 @@ function DoorwayPage() {
       <div className="gradient-bg">
         <svg xmlns="http://www.w3.org/2000/svg">
           <defs>
-            {/* Keep the filter id for compatibility, but we primarily use plain blur for perf */}
             <filter id="goo">
               <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
-              <feColorMatrix
-                in="blur"
-                mode="matrix"
+              <feColorMatrix in="blur" mode="matrix"
                 values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8"
-                result="goo"
-              />
+                result="goo" />
               <feBlend in="SourceGraphic" in2="goo" />
             </filter>
           </defs>
         </svg>
-
         <div className="gradients-container">
-          <div className="g1" />
-          <div className="g2" />
-          <div className="g3" />
-          <div className="g4" />
-          <div className="g5" />
+          <div className="g1" /><div className="g2" /><div className="g3" /><div className="g4" /><div className="g5" />
           <div className="interactive" ref={interactiveRef} />
         </div>
       </div>
 
       <div className="content-wrapper">
         <div className="heading-container">
-          <img
-            src={logo}
-            alt="Logo"
-            className="heading-logo"
-            loading="lazy"
-            decoding="async"
-          />
+          <img src={logo} alt="Logo" className="heading-logo" loading="lazy" decoding="async" />
           <h1>CreatorFlow</h1>
         </div>
 
@@ -275,47 +223,29 @@ function DoorwayPage() {
           <h2>Your script:</h2>
 
           <div className="inside-card markdown-output">
-            {isThinking && (
-              <p className="thinking-indicator">
-                Thinking<span className="dots">...</span>
-              </p>
-            )}
-
-            {(!sections || isThinking) ? (
-              <ReactMarkdown>{generatedText || ""}</ReactMarkdown>
-            ) : (
-              <div className="script-grid">
-                {sections.map((s) => (
-                  <section
-                    key={s.key}
-                    className={`script-box script-${s.key.toLowerCase()}`}
-                    aria-label={s.key}
-                  >
-                    <div className="script-box__label">{s.key}</div>
-                    <div className="script-box__content">
-                      <ReactMarkdown>{s.content}</ReactMarkdown>
-                    </div>
-                  </section>
-                ))}
-              </div>
-            )}
-
+            {isThinking && <p className="thinking-indicator">Thinking<span className="dots">...</span></p>}
+            {(!sections || isThinking)
+              ? <ReactMarkdown>{generatedText || ""}</ReactMarkdown>
+              : (
+                <div className="script-grid">
+                  {sections.map((s) => (
+                    <section key={s.key} className={`script-box script-${s.key.toLowerCase()}`} aria-label={s.key}>
+                      <div className="script-box__label">{s.key}</div>
+                      <div className="script-box__content"><ReactMarkdown>{s.content}</ReactMarkdown></div>
+                    </section>
+                  ))}
+                </div>
+              )}
             <pre ref={preRef} style={{ display: "none" }}>{generatedText}</pre>
           </div>
 
           <div className="buttons-wrapper">
             <div className="buttons">
-              <button
-                className="generate-btn"
-                onClick={fetchChatGPT}
-                disabled={credits === null || credits < 10 || isThinking}
-              >
+              <button className="generate-btn" onClick={fetchChatGPT} disabled={credits === null || credits < 10 || isThinking}>
                 {isThinking ? "Generating..." : "Generate again"}
               </button>
 
-              <button className="prompt-btn" onClick={() => navigate("/target")}>
-                New prompt
-              </button>
+              <button className="prompt-btn" onClick={() => navigate("/target")}>New prompt</button>
 
               <div className="back-btn-wrapper">
                 <button className="back-btn" onClick={() => navigate("/target")} aria-label="Back">
@@ -326,14 +256,10 @@ function DoorwayPage() {
 
               <div className="credit-box">
                 <span className="credit-label">💎</span>
-                <span className="credit-value">
-                  {credits !== null ? `${credits} credits left` : "Loading..."}
-                </span>
+                <span className="credit-value">{credits !== null ? `${credits} credits left` : "Loading..."}</span>
               </div>
 
-              <button className="copy-btn" aria-label="Copy" onClick={handleCopyClick}>
-                <FaCopy />
-              </button>
+              <button className="copy-btn" aria-label="Copy" onClick={handleCopyClick}><FaCopy /></button>
             </div>
           </div>
         </div>
