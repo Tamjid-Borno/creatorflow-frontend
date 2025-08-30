@@ -241,3 +241,90 @@
   .cf-signup .pill-link,
   .cf-signup .back-button{ transition:none !important; }
 }
+
+/* === ULTRA-SNUG GOOGLE BUTTON === */
+.cf-signup .google-button {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  gap:4px;                        /* tighter gap between logo & text */
+  width:100%;
+  height:52px;                    /* slightly smaller than before */
+  padding:0 18px;
+  border-radius:14px;
+  border:1px solid transparent;
+  cursor:pointer;
+
+  font-family:var(--font-head);
+  font-weight:600;                /* lighter weight for balance */
+  font-size:.95rem;               /* reduced font size */
+  line-height:1;
+  letter-spacing:.05px;
+
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+
+/* ICON (shift inward) */
+.cf-signup .google-button > img {
+  width:20px;
+  height:20px;
+  display:block;
+  object-fit:contain;
+  flex-shrink:0;
+
+  margin-left:4px;    /* push logo slightly rightward */
+}
+
+/* LABEL (shift left a bit) */
+.cf-signup .google-button .btn-label {
+  display:inline-block;
+  line-height:1;
+  transform:translateX(-2px); /* pull text slightly left */
+  white-space:nowrap;
+}
+
+/* White Google variant */
+.cf-signup .google-button--google {
+  background:#fff;
+  color:#0E1330;
+  border-color:rgba(0,0,0,.12);
+  box-shadow:0 1px 0 rgba(255,255,255,.9) inset, 0 10px 18px rgba(16,20,40,.12);
+}
+.cf-signup .google-button--google:hover {
+  transform:translateY(-1px);
+  box-shadow:0 1px 0 rgba(255,255,255,.95) inset, 0 14px 24px rgba(16,20,40,.18);
+}
+
+/* Outline variant */
+.cf-signup .google-button--outline {
+  background:linear-gradient(180deg,#11162F,#0C1430);
+  color:#E8F0FF;
+  border-color:rgba(102,224,255,.55);
+  box-shadow:0 8px 18px rgba(19,142,177,.16);
+}
+.cf-signup .google-button--outline:hover {
+  transform:translateY(-1px);
+  box-shadow:0 12px 24px rgba(19,142,177,.22);
+}
+
+/* Mobile adjustments */
+@media (max-width:560px){
+  .cf-signup .google-button {
+    height:48px;
+    padding:0 14px;
+    font-size:.9rem;
+    gap:3px;
+  }
+  .cf-signup .google-button > img {
+    width:18px; height:18px;
+    margin-left:3px;
+  }
+  .cf-signup .google-button .btn-label {
+    transform:translateX(-1px);
+  }
+}
