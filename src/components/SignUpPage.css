@@ -1,39 +1,34 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300..900&family=Sora:wght@500;600;700;800&display=swap');
 
-/* ─────────────────────────────────────────
-   Scoped tokens
-   ───────────────────────────────────────── */
+/* =============================
+   Scoped design tokens (dark)
+   ============================= */
 .cf-signup{
-  --bg:#0f1115;               /* darker base (matches your theme) */
+  --bg:#0f1115;
   --ink:#f4f6fb;
   --muted:#aeb6c9;
   --card:#111524;
   --border:#242a3a;
 
-  --accent:#2a62d5;
-  --accent-ink:#cfe0ff;
-  --accent-soft:#0f1a32;
+  --accent:#3a66e3;
+  --accent-ink:#d6e4ff;
 
-  --brandGlow: radial-gradient(80% 120% at 50% 0%, rgba(73,123,255,.22) 0%, rgba(168,124,255,.18) 40%, rgba(231,45,126,.12) 70%, transparent 100%);
+  --brandGlow: radial-gradient(80% 120% at 50% 0%, rgba(73,123,255,.18) 0%, rgba(168,124,255,.14) 40%, rgba(231,45,126,.10) 70%, transparent 100%);
 
   --radius:16px;
   --radius-lg:20px;
 
   --shadow-md:0 18px 60px rgba(0,0,0,.28);
-  --shadow-lg:0 26px 80px rgba(0,0,0,.35);
 
   --font-head:"Sora",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
   --font-body:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
 
-  /* Buttons */
-  --btn-h: clamp(46px, 5.2vh, 54px);
+  --btn-h: 52px;
   --btn-r: 12px;
 
-  /* unified page gutter */
   --page-gutter: max(16px, 4vw);
 }
 
-/* Scope box-sizing so grid math never overflows */
 .cf-signup, .cf-signup * { box-sizing: border-box; }
 
 /* Wrapper */
@@ -42,24 +37,26 @@
   display: grid;
   place-items: center;
   background: var(--bg);
-  padding-block: max(14px, clamp(14px, 3vw, 36px));
+  padding-block: max(14px, 3vw);
   padding-left:  calc(var(--page-gutter) + env(safe-area-inset-left, 0px));
   padding-right: calc(var(--page-gutter) + env(safe-area-inset-right, 0px));
   overflow-x: hidden;
 }
 
-/* ─────────────────────────────────────────
-   Layout — TRUE center on desktop
-   ───────────────────────────────────────── */
+/* =============================
+   Layout — pristine desktop
+   ============================= */
 .cf-signup .signup-container{
-  width: min(1060px, 100%);
+  /* Left column is fluid; right (card) is a fixed, comfy width */
+  width: min(1200px, 100%);
   margin-inline: auto;
 
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(18px, 3vw, 40px);
+  grid-template-columns: minmax(380px, 1fr) 520px;   /* ← fixed card column */
   align-items: center;
-  justify-items: center;            /* centers both columns */
+  justify-content: center;
+  justify-items: center;                             /* centers both columns */
+  column-gap: clamp(32px, 6vw, 80px);
 }
 
 /* Left panel */
@@ -70,26 +67,26 @@
   padding: clamp(8px, 1.8vw, 16px);
 }
 .cf-signup .brand{ display: inline-flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-.cf-signup .brand__logo{ width: clamp(34px, 4vw, 56px); height: auto; filter: drop-shadow(0 2px 6px rgba(73,123,255,.25)); }
-.cf-signup .brand__name{ font-family: var(--font-head); font-weight: 800; letter-spacing: -0.02em; font-size: clamp(26px, 3.4vw, 42px); color: var(--ink); margin: 0; line-height: 1.06; }
-.cf-signup .brand__tagline{ font-family: var(--font-body); font-size: clamp(13px, 1.2vw, 16px); color: var(--muted); margin: 8px 0 0; max-width: 52ch; }
+.cf-signup .brand__logo{ width: clamp(34px, 3.2vw, 54px); height: auto; filter: drop-shadow(0 2px 6px rgba(73,123,255,.25)); }
+.cf-signup .brand__name{ font-family: var(--font-head); font-weight: 800; letter-spacing: -0.02em; font-size: clamp(26px, 3.2vw, 42px); color: var(--ink); margin: 0; line-height: 1.06; }
+.cf-signup .brand__tagline{ font-family: var(--font-body); font-size: clamp(13px, 1.05vw, 16px); color: var(--muted); margin: 8px 0 0; max-width: 58ch; }
 
-/* Right card */
+/* Right card (fixed width, centered) */
 .cf-signup .signup-right{
-  width: 100%;
+  width: 520px;                      /* hard cap = matches grid column */
   max-width: 520px;
   justify-self: start;
 
   position: relative;
-  background: linear-gradient(180deg, rgba(22,26,44,.88), rgba(18,22,36,.88));
+  background: linear-gradient(180deg, rgba(22,26,44,.92), rgba(18,22,36,.92));
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,.04);
+  box-shadow: var(--shadow-md);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 
-  padding: clamp(18px, 2.2vw, 28px);
-  overflow: hidden;                  /* 🔒 clip any halo/child overflow */
+  padding: 22px 22px 18px;           /* generous internal breathing */
+  overflow: hidden;                   /* clip halo nicely */
 }
 
 .cf-signup .auth-top{
@@ -101,18 +98,18 @@
   font-weight: 800;
   color: var(--ink);
   letter-spacing: -0.01em;
-  font-size: clamp(18px, 1.9vw, 26px);
+  font-size: clamp(20px, 1.6vw, 26px);
   margin: 0;
 }
 
-/* Login pill (small, visible) */
+/* Small login pill */
 .cf-signup .pill-link{
   display:inline-flex; align-items:center; justify-content:center;
-  height: 34px; padding: 0 12px;
-  border-radius: 999px; border: 1.25px solid #3a66e3;
-  background: #0f1a32; color: #cfe0ff;
-  font-family: var(--font-head); font-weight: 800; letter-spacing: .1px;
-  cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease, color .18s ease;
+  height: 32px; padding: 0 12px;
+  border-radius: 999px; border: 1.25px solid var(--accent);
+  background: #0f1a32; color: var(--accent-ink);
+  font-family: var(--font-head); font-weight: 800; letter-spacing:.1px;
+  cursor:pointer; transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
 }
 .cf-signup .pill-link:hover{ background:#13234a; transform: translateY(-1px); box-shadow:0 8px 18px rgba(58,102,227,.22); }
 .cf-signup .pill-link:disabled{ opacity:.6; cursor:not-allowed; }
@@ -124,27 +121,26 @@
   font-weight:600; margin: 6px 0 12px 0;
 }
 
-/* CTA area + halo (kept inside via overflow:hidden above) */
+/* CTA area + halo (contained) */
 .cf-signup .cta-wrap{ position:relative; margin: 10px 0 6px; }
 .cf-signup .cta-wrap::before{
-  content:""; position:absolute; inset:-14px -10px -10px -10px;
-  background:var(--brandGlow); filter:blur(14px); border-radius:28px;
-  pointer-events:none; opacity:.5;
+  content:""; position:absolute; inset:-12px -8px -8px -8px;
+  background:var(--brandGlow); filter:blur(12px); border-radius:28px; pointer-events:none; opacity:.5;
 }
 
-/* Two-button grid — never overflows */
+/* Two-button grid — perfectly inside the card */
 .cf-signup .cta-grid{
+  width: 100%;
   display:grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 10px;
   align-items: stretch;
 }
 
-/* Buttons (refined) */
+/* Buttons */
 .cf-signup .google-button{
-  position: relative;
   display:inline-flex; align-items:center; justify-content:center; gap:12px;
-  width:100%; height: var(--btn-h); padding: 0 18px;
+  width:100%; height: var(--btn-h); padding: 0 16px;
   font-family:var(--font-head); font-weight:800;
   font-size: clamp(.95rem, .9vw, 1.05rem);
   letter-spacing:.1px; line-height:1;
@@ -152,31 +148,30 @@
   cursor:pointer; -webkit-tap-highlight-color: transparent;
   white-space: nowrap;
   transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease, color .18s ease;
-  will-change: transform, box-shadow;
 }
 .cf-signup .google-button img{ width:20px; height:20px; object-fit:contain; }
 
 /* Primary (white) */
 .cf-signup .google-button--google{
-  background:#ffffff; color:#22252c;
+  background:#fff; color:#22252c;
   border:1px solid #2b3247;
-  box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 10px 20px rgba(0,0,0,.28);
+  box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 10px 18px rgba(0,0,0,.24);
 }
 .cf-signup .google-button--google:hover{
   background:#fafbfe; border-color:#3a4464; transform: translateY(-1px);
-  box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 18px 30px rgba(0,0,0,.38);
+  box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 16px 24px rgba(0,0,0,.32);
 }
 
-/* Secondary (outline, sharp) */
+/* Secondary (outlined, dark) */
 .cf-signup .google-button--outline{
   background:#0f1426;
   color: var(--accent-ink);
-  border: 1.25px solid #4068e6;
-  box-shadow: 0 8px 18px rgba(64,104,230,.18) inset, 0 10px 22px rgba(64,104,230,.14);
+  border:1.25px solid var(--accent);
+  box-shadow: 0 8px 18px rgba(64,104,230,.14) inset, 0 10px 18px rgba(64,104,230,.14);
 }
 .cf-signup .google-button--outline:hover{
   background:#121a34; transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(64,104,230,.24) inset, 0 18px 28px rgba(64,104,230,.22);
+  box-shadow: 0 12px 22px rgba(64,104,230,.22) inset, 0 16px 22px rgba(64,104,230,.20);
 }
 
 .cf-signup .google-button--google:disabled,
@@ -214,9 +209,9 @@
   border-radius: 14px;
 }
 
-/* ─────────────────────────────────────────
+/* =============================
    RESPONSIVE
-   ───────────────────────────────────────── */
+   ============================= */
 
 /* Tablet and down — stack & center */
 @media (max-width: 992px){
@@ -232,14 +227,19 @@
   }
   .cf-signup .brand{ justify-content: center; }
   .cf-signup .brand__tagline{ max-width: 62ch; }
-  .cf-signup .signup-right{ margin: 0 auto; max-width: 560px; justify-self: center; }
+
+  .cf-signup .signup-right{
+    width: 100%;
+    max-width: 560px;
+    justify-self: center;
+  }
 }
 
-/* Phones — stack buttons, tighten paddings */
+/* Phones — stack buttons */
 @media (max-width: 560px){
   .cf-signup .signup-right{ padding: clamp(14px, 4.2vw, 22px); }
   .cf-signup .cta-grid{ grid-template-columns: 1fr; }
-  .cf-signup .google-button{ height: clamp(44px, 6.2vh, 50px); padding: 0 14px; font-size: .96rem; }
+  .cf-signup .google-button{ height: 48px; padding: 0 14px; font-size: .96rem; }
   .cf-signup .brand__name{ font-size: clamp(22px, 7.2vw, 34px); }
   .cf-signup .brand__logo{ width: clamp(30px, 8vw, 46px); }
   .cf-signup .brand__tagline{ font-size: clamp(12px, 3.5vw, 14px); }
@@ -248,7 +248,7 @@
 /* XS phones */
 @media (max-width: 380px){
   .cf-signup .signup-right{ border-radius: 18px; }
-  .cf-signup .google-button{ height: 44px; }
+  .cf-signup .google-button{ height: 46px; }
   .cf-signup .cta-wrap::before{ inset: -10px -8px -8px -8px; filter: blur(12px); }
 }
 
@@ -260,10 +260,4 @@
   .cf-signup .back-button{
     transition: none !important;
   }
-}
-
-/* High contrast */
-@media (prefers-contrast: more){
-  .cf-signup .signup-right{ border-color:#39415a; box-shadow:none; }
-  .cf-signup .google-button--outline{ border-width: 2px; }
 }
