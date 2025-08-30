@@ -25,6 +25,16 @@
   --header-pad-x: clamp(16px, 3vw, 40px);
   --header-pad-top: clamp(8px, 1.4vw, 14px);
   --header-pad-bottom: clamp(6px, 1.2vw, 12px);
+
+  /* RESERVED SPACE so the fixed bottom card never overlaps content */
+  --card-reserve: clamp(260px, 42svh, 520px);
+}
+
+/* Desktop/laptop: a bit more reserve (taller card) */
+@media (min-width: 981px) {
+  :root {
+    --card-reserve: clamp(420px, 58vh, 820px);
+  }
 }
 
 /* ≤980px: tuned rhythm for “mobile-like” screens */
@@ -80,17 +90,10 @@
     radial-gradient(1px 1px at 83% 58%, rgba(255,255,255,.7), transparent 60%),
     radial-gradient(1px 1px at 42% 44%, rgba(255,255,255,.7), transparent 60%);
 }
-.gradient-bg svg{
-  position: fixed;
-  inset: 0;
-  width: 0;
-  height: 0;
-}
+.gradient-bg svg{ position: fixed; inset: 0; width: 0; height: 0; }
 .gradients-container{ filter: blur(var(--blob-blur)); width:100%; height:100%; }
 .g1,.g2,.g3,.g4,.g5,.interactive{
-  position:absolute;
-  mix-blend-mode:var(--blending);
-  will-change:transform,opacity;
+  position:absolute; mix-blend-mode:var(--blending); will-change:transform,opacity;
 }
 .g1{
   background:radial-gradient(circle, rgba(var(--accent1),var(--blob-opacity)) 0, rgba(var(--accent1),0) 55%);
@@ -140,11 +143,12 @@
 .doorway-wrapper{
   width:100vw; min-height:100svh; overflow:hidden; position:relative; background:var(--bg2);
 }
-/* Tighter layout + reserve space so the fixed card never overlaps header */
 .content-wrapper{
   position:relative; display:flex; flex-direction:column; justify-content:flex-start;
   gap:var(--stack-gap); min-height:100svh; z-index:10; padding:0; box-sizing:border-box;
-  padding-bottom: clamp(200px, 34vh, 420px); /* reserved space behind fixed card */
+
+  /* Reserve vertical space so the fixed bottom card never hides content */
+  padding-bottom: var(--card-reserve);
 }
 
 /* =========================
@@ -170,13 +174,13 @@
 }
 
 /* =========================
-   Foreground card (FIXED to bottom)
+   Foreground card (FIXED to bottom on ALL sizes)
    ========================= */
 .foreground-card{
   position: fixed;
   left: 50%;
-  transform: translateX(-50%);
-  bottom: max(12px, env(safe-area-inset-bottom, 12px)); /* iOS safe-area */
+  transform: translateX(-50%) translateZ(0); /* GPU promote for smoothness */
+  bottom: env(safe-area-inset-bottom, 0px);  /* attached to bottom, respects iOS safe area */
   z-index: 15;
 
   display: grid;
@@ -188,27 +192,35 @@
   background: rgba(10, 12, 22, 0.62);
   border-radius: 18px 18px 0 0;
   backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   box-shadow: 0 -2px 18px rgba(0,0,0,.4);
   padding: 1.2rem 1.1rem;
   color:#fff; box-sizing:border-box; min-height: 260px;
+
+  will-change: transform, opacity;
 }
-@media (max-width:980px){
+
+/* Small devices: make it full-width & perfectly docked */
+@media (max-width:680px){
   .foreground-card{
-    width:min(96%, 760px);
-    border-radius:16px 16px 0 0;
-    padding:1rem .9rem;
-    gap:.8rem;
+    left: 0; right: 0; transform: translateZ(0);
+    width: 100%;
+    border-radius: 14px 14px 0 0;
+    padding: .85rem .75rem;
+    box-shadow: 0 -1px 10px rgba(0,0,0,.25);
   }
 }
-@media (max-width:480px){
+
+@media (min-width: 981px) {
+  /* wider & taller docked card on desktop */
   .foreground-card{
-    width:100%;
-    border-radius:14px 14px 0 0;
-    padding:.75rem;
-    gap:.75rem;
-    box-shadow:0 -1px 10px rgba(0,0,0,.25)
+    width: min(96%, 1500px);
+    padding: 1.3rem 1.2rem;
+    min-height: clamp(420px, 85vh, 2000px);
   }
 }
+
+/* Title */
 .foreground-card h2{
   font-size:clamp(1rem, 2vw, 1.35rem); margin:0; align-self:center; font-weight:600;
 }
@@ -219,24 +231,28 @@
 .inside-card{
   background: transparent; border-radius:10px; width:100%; margin:0 auto;
   min-height: clamp(150px, 26vh, 300px);
-  max-height: clamp(220px, 52vh, 560px); /* default for fixed card */
+  max-height: clamp(220px, 52vh, 560px);
   overflow-y:auto;
   font-family:"Raleway", sans-serif; color:#F2F4FF; font-size:1.04rem; line-height:1.8;
   padding:1rem 1rem 1.1rem;
   display:flex; flex-direction:column; align-items:flex-start;
   scroll-behavior:smooth;
   scrollbar-width:thin; scrollbar-color:rgba(222,116,162,.32) transparent;
+
+  will-change: scroll-position; contain: content;
 }
 @media (max-width:980px){
   .inside-card{
     font-size:1rem; line-height:1.7;
-    max-height:calc(100svh - 300px);
+    /* fixed card stays; we keep a reasonable reading window */
+    max-height: clamp(220px, 52svh, 560px);
   }
 }
 @media (max-width:480px){
   .inside-card{
     font-size:.95rem; line-height:1.6;
-    max-height:calc(100svh - 260px); padding:12px
+    max-height: clamp(200px, 52svh, 520px);
+    padding:12px;
   }
 }
 .markdown-output{ white-space:pre-line }
@@ -259,6 +275,7 @@
 .buttons{
   display:flex; flex-direction:row; gap:.8rem; width:min(92%, 920px); margin:0 auto;
   justify-content:space-between; padding:16px; background:rgba(8,10,22,.6); border-radius:16px;
+  will-change: transform; transform: translateZ(0);
 }
 @media (max-width:980px){
   .buttons{
@@ -272,6 +289,7 @@
   position:relative; padding:.9rem 1.4rem; font-weight:600; font-size:1rem; letter-spacing:.25px;
   color:#fff; border-radius:10px; background:transparent; cursor:pointer;
   transition:transform .22s ease, background .22s ease, color .22s ease; outline:none; border:none;
+  will-change: transform; transform: translateZ(0);
 }
 .generate-btn::before{
   content:""; position:absolute; inset:-2px; border-radius:12px;
@@ -367,52 +385,7 @@
 }
 .script-box__content{ color:#E9E9FF; font-size:var(--sb-fz); line-height:1.6; word-break:break-word; overflow-wrap:anywhere }
 
-/* ======== DESKTOP BOOST: bigger/taller card ======== */
-@media (min-width: 981px) {
-  /* reserve more room so header never overlaps the fixed card */
-  .content-wrapper{ padding-bottom: clamp(300px, 58vh, 820px); }
-
-  /* wider & taller docked card */
-  .foreground-card{
-    width: min(96%, 1500px); padding: 1.3rem 1.2rem; min-height: clamp(420px, 85vh, 2000px);
-  }
-
-  /* taller reading window inside the card */
-  .inside-card{ max-height: clamp(320px, 62vh, 760px); }
-}
-
-/* ============================================================
-   MOBILE FIX: Prevent header collision — undock the card on ≤980px
-   ============================================================ */
-@media (max-width: 980px){
-  /* No need to reserve bottom space when card is not fixed */
-  .content-wrapper{
-    padding-bottom: 12px !important;
-  }
-
-  /* Let the card flow as a normal section (no overlap with header) */
-  .foreground-card{
-    position: static !important;
-    left: auto !important;
-    bottom: auto !important;
-    transform: none !important;
-
-    width: min(96%, 760px) !important;
-    margin: 8px var(--header-pad-x) 0 !important;
-    border-radius: 16px !important;
-    box-shadow: 0 6px 24px rgba(0,0,0,.35) !important;
-  }
-
-  /* Let content grow naturally */
-  .inside-card{
-    max-height: none !important;
-    min-height: 220px !important;
-  }
-
-  .buttons{ width:100% !important; }
-}
-
-/* Tiny phones: tighter margins */
+/* Tiny phones: tighter margins for the card’s outer container */
 @media (max-width: 420px){
-  .foreground-card{ margin: 6px 12px 0 !important; }
+  .foreground-card{ padding: .75rem; }
 }
