@@ -283,7 +283,7 @@ const Navbar = () => {
                 <span>My Dashboard</span>
               </button>
 
-              {/* Username stays, but now clearly labeled as account */}
+              {/* Username also routes to Dashboard */}
               <button
                 className="nav-link user-displayname"
                 onClick={() => go('/dashboard')}
@@ -377,7 +377,7 @@ const Navbar = () => {
           </div>
 
           {/* Logout card */}
-          <div className="drawer-card">
+          <div className="drawer-card drawer-bottom-pad">
             {user ? (
               <button className="btn btn-danger btn-block" onClick={handleLogoutClick}>
                 <IonIcon icon={logOutOutline} aria-hidden="true" />
