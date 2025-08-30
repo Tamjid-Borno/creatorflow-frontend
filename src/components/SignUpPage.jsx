@@ -10,6 +10,7 @@ import { getDoc, doc, setDoc } from 'firebase/firestore';
 const SignUpPage = () => {
   const navigate = useNavigate();
   const provider = new GoogleAuthProvider();
+
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
 
@@ -26,6 +27,7 @@ const SignUpPage = () => {
   };
 
   const handleGoogleSignUp = async () => {
+    if (loading) return;
     setErr('');
     setLoading(true);
     try {
@@ -50,6 +52,7 @@ const SignUpPage = () => {
   };
 
   const handleGoogleLogin = async () => {
+    if (loading) return;
     setErr('');
     setLoading(true);
     try {
@@ -100,9 +103,11 @@ const SignUpPage = () => {
             className="signup-right"
             aria-live="polite"
             aria-busy={loading ? 'true' : 'false'}
+            data-loading={loading ? 'true' : 'false'}
           >
             <div className="auth-top">
               <h2 className="auth-headline">Sign up with Google</h2>
+              {/* Quick access login pill */}
               <button
                 type="button"
                 className="pill-link"
@@ -121,7 +126,7 @@ const SignUpPage = () => {
               </div>
             ) : null}
 
-            {/* Primary CTAs with shared halo */}
+            {/* Primary CTAs */}
             <div className="cta-wrap">
               <div className="cta-grid">
                 <button
@@ -160,7 +165,6 @@ const SignUpPage = () => {
               We only access your name and email—no spam.
             </p>
 
-            {/* Optional secondary helper */}
             <p className="helper">
               Already have an account?
               <button
