@@ -11,10 +11,10 @@
   --border:#e5e7ef;
 
   --accent:#2a62d5;
-  --accent-ink:#1d3c9a;
+  --accent-ink:#103a9c;
   --accent-soft:#edf3ff;
 
-  --brandGlow: radial-gradient(80% 120% at 50% 0%, rgba(255,60,172,.30) 0%, rgba(120,75,160,.20) 40%, rgba(43,134,197,.16) 70%, transparent 100%);
+  --brandGlow: radial-gradient(80% 120% at 50% 0%, rgba(255,60,172,.28) 0%, rgba(120,75,160,.20) 40%, rgba(43,134,197,.14) 70%, transparent 100%);
   --radius:16px;
   --radius-lg:22px;
 
@@ -25,34 +25,39 @@
   --font-head:"Sora",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
   --font-body:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
 
-  /* unified page gutter for perfect centering on mobile */
   --page-gutter: max(16px, 4vw);
 }
 
-/* Wrapper (scoped) */
+/* Wrapper */
 .cf-signup .signup-wrapper{
   min-height: 100svh;
   display: grid;
   place-items: center;
   background: var(--bg);
-
   padding-block: max(14px, clamp(14px, 3vw, 36px));
   padding-left:  calc(var(--page-gutter) + env(safe-area-inset-left, 0px));
   padding-right: calc(var(--page-gutter) + env(safe-area-inset-right, 0px));
-
   overflow-x: hidden;
 }
 
-/* Two-column container */
+/* ================ DESKTOP LAYOUT FIX ================ */
+/* Center the two columns and balance widths */
 .cf-signup .signup-container{
-  width: min(1180px, 100%);
+  width: min(1120px, 100%);
   margin-inline: auto;
+
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-  gap: clamp(14px, 2.8vw, 36px);
-  align-items: stretch;
-  grid-auto-rows: minmax(0, auto);
+  /* two equal columns, centered as a block */
+  grid-template-columns: minmax(0, 520px) minmax(0, 520px);
+  justify-content: center;
+
+  align-items: center;           /* vertical centering in the row */
+  gap: clamp(16px, 3vw, 36px);
+  min-height: min(86vh, 920px);  /* keeps it hero-like without huge empty space */
 }
+
+.cf-signup .signup-left,
+.cf-signup .signup-right{ width: 100%; }
 
 /* Left brand panel */
 .cf-signup .signup-left{
@@ -62,7 +67,6 @@
   background: transparent;
   border-radius: var(--radius);
   padding: clamp(10px, 2vw, 24px);
-  min-height: 540px;
 }
 
 .cf-signup .brand{
@@ -75,56 +79,58 @@
   width: clamp(34px, 4.2vw, 58px);
   height: auto;
   display: block;
-  flex: 0 0 auto;
   filter: drop-shadow(0 2px 6px rgba(42,98,213,.16));
 }
 .cf-signup .brand__name{
   font-family: var(--font-head);
   font-weight: 800;
   letter-spacing: -0.02em;
-  font-size: clamp(22px, 3.8vw, 42px);
+  font-size: clamp(26px, 3.6vw, 44px);
   color: var(--ink);
   margin: 0;
   line-height: 1.06;
 }
 .cf-signup .brand__tagline{
   font-family: var(--font-body);
-  font-size: clamp(13px, 1.6vw, 16px);
+  font-size: clamp(14px, 1.4vw, 18px);
   color: #4b4f57;
-  margin: 6px 0 0 0;
-  max-width: 52ch;
+  margin: 8px 0 0;
+  max-width: 54ch;
 }
 
-/* Right auth card (with subtle premium outline) */
+/* Right auth card — premium look */
 .cf-signup .signup-right{
   position: relative;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  padding: clamp(18px, 2.6vw, 32px);
+  padding: clamp(20px, 2.6vw, 34px);
+
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 540px;
 
   max-width: 520px;
-  width: min(520px, 100%);
-  margin-left: auto;
+  width: 100%;
+  /* remove the old push-right behaviour */
+  margin-left: 0;
+  justify-self: center;
+
   will-change: transform, box-shadow;
 }
 @media (hover: hover) and (pointer: fine){
   .cf-signup .signup-right::before{
     content:"";
     position:absolute; inset:0; border-radius: inherit; padding: 1.5px;
-    background: linear-gradient(120deg, #dfe3ff, #f0f2ff 40%, #e7ecff 60%, #ffffff 80%);
+    background: linear-gradient(120deg, #e9ecff, #ffffff 45%, #e9ecff 90%);
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor; mask-composite: exclude;
-    pointer-events: none; opacity:.85;
+    pointer-events: none; opacity:.9;
   }
 }
 
-/* Top row: headline + login pill (visible, high affordance) */
+/* Top row: headline + login pill */
 .cf-signup .auth-top{
   display: flex;
   align-items: center;
@@ -138,12 +144,11 @@
   font-weight: 800;
   color: var(--ink);
   letter-spacing: -0.01em;
-  font-size: clamp(18px, 2.2vw, 28px);
+  font-size: clamp(20px, 2vw, 28px);
   margin: 0;
-  line-height: 1.15;
 }
 
-/* Highly-visible login pill (calls handleGoogleLogin) */
+/* Login pill */
 .cf-signup .pill-link{
   display: inline-flex;
   align-items: center;
@@ -179,10 +184,10 @@
   margin:6px 0 14px 0;
 }
 
-/* Primary CTA block with halo */
+/* CTA area with halo */
 .cf-signup .cta-wrap{
   position: relative;
-  margin: 8px 0;
+  margin: 10px 0 6px;
 }
 .cf-signup .cta-wrap::before{
   content:"";
@@ -192,10 +197,10 @@
   filter:blur(16px);
   border-radius:28px;
   pointer-events:none;
-  opacity:.6;
+  opacity:.55;
 }
 
-/* Two-button grid (prominent login too) */
+/* Two-button grid */
 .cf-signup .cta-grid{
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -203,14 +208,14 @@
   align-items: center;
 }
 
-/* Google-compliant buttons */
+/* Google buttons */
 .cf-signup .google-button{
   display:inline-flex;
   align-items:center;
   justify-content:center;
   gap:12px;
   width:100%;
-  padding:14px 18px;                 /* a bit taller on desktop */
+  padding:14px 18px;
   min-height: 54px;
   font-family:var(--font-head);
   font-weight:800;
@@ -225,7 +230,7 @@
   width:22px; height:22px; object-fit:contain;
 }
 
-/* Primary Google button — white with subtle lift */
+/* Primary (white) */
 .cf-signup .google-button--google{
   background:#fff;
   color:#3c4043;
@@ -239,10 +244,10 @@
   box-shadow:0 10px 26px rgba(0,0,0,.10);
 }
 
-/* Secondary but equally noticeable login button (outline) */
+/* Secondary (outlined login) */
 .cf-signup .google-button--outline{
   background:#ffffff;
-  color:#103a9c;
+  color:var(--accent-ink);
   border:2px solid var(--accent);
   box-shadow:0 2px 12px rgba(42,98,213,.10);
 }
@@ -258,7 +263,7 @@
   cursor:not-allowed;
 }
 
-/* Notes */
+/* Notes / Legal */
 .cf-signup .cta-note{
   margin-top:10px;
   color:#8a8e97;
@@ -266,8 +271,6 @@
   font-size:.92rem;
   text-align: center;
 }
-
-/* Legal / trust copy */
 .cf-signup .legal{
   margin:12px 0 2px 0;
   color:#7a808a;
@@ -283,7 +286,7 @@
 }
 .cf-signup .legal a:hover{ text-decoration:underline; }
 
-/* Secondary helper */
+/* Helper */
 .cf-signup .helper{
   margin:0;
   color:#6a6f79;
@@ -315,7 +318,6 @@
   box-shadow:0 12px 28px rgba(2,152,102,.25);
   transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
   z-index: 10;
-  will-change: transform, opacity;
 }
 .cf-signup .back-button:hover{
   transform: translateY(-1px);
@@ -323,7 +325,7 @@
   box-shadow:0 18px 36px rgba(2,152,102,.35);
 }
 
-/* Focus visibility (keyboard) */
+/* Focus visibility */
 .cf-signup .google-button--google:focus-visible,
 .cf-signup .google-button--outline:focus-visible,
 .cf-signup .text-link:focus-visible,
@@ -335,20 +337,17 @@
 }
 
 /* =============================
-   RESPONSIVE HARDENING
+   RESPONSIVE
    ============================= */
-
-/* Tablet & down: stack & center */
 @media (max-width: 992px){
   .cf-signup .signup-container{
     grid-template-columns: 1fr;
     gap: 16px;
     width: 100%;
     max-width: 720px;
-    margin-inline: auto;
+    min-height: auto;
   }
   .cf-signup .signup-left{
-    min-height: auto;
     align-items: center;
     text-align: center;
     padding: 8px 0 0;
@@ -357,14 +356,12 @@
   .cf-signup .brand__tagline{ max-width: 62ch; }
 
   .cf-signup .signup-right{
-    min-height: auto;
     margin: 0 auto;
     width: 100%;
     max-width: 560px;
   }
 }
 
-/* Phones (≤560px): tighten paddings/typography and stack CTAs */
 @media (max-width: 560px){
   .cf-signup .signup-wrapper{ padding-block: max(10px, 3.5vw); }
   .cf-signup .brand__name{ font-size: clamp(20px, 7.2vw, 32px); }
@@ -372,7 +369,7 @@
   .cf-signup .brand__tagline{ font-size: clamp(12px, 3.5vw, 14px); }
 
   .cf-signup .signup-right{ padding: clamp(14px, 4vw, 22px); }
-  .cf-signup .cta-grid{ grid-template-columns: 1fr; } /* stack buttons */
+  .cf-signup .cta-grid{ grid-template-columns: 1fr; }
   .cf-signup .google-button--google,
   .cf-signup .google-button--outline{
     font-size: .96rem; padding: 12px 14px; min-height: 48px;
@@ -382,7 +379,6 @@
   .cf-signup .back-button{ left: 12px; bottom: 12px; padding: 7px 12px; }
 }
 
-/* Extra-small phones (≤420px) */
 @media (max-width: 420px){
   .cf-signup .signup-container{ max-width: 360px; }
   .cf-signup .brand{ gap: 10px; }
@@ -393,20 +389,14 @@
   .cf-signup .signup-right{ max-width: 100%; }
 }
 
-/* Micro devices (≤360px) */
 @media (max-width: 360px){
-  .cf-signup .signup-wrapper{ padding-block: max(8px, 3vw); }
   .cf-signup .signup-container{ max-width: 320px; gap: 12px; }
-  .cf-signup .brand{ flex-wrap: wrap; justify-content: center; }
-  .cf-signup .brand__name{ font-size: clamp(18px, 7.5vw, 28px); }
-  .cf-signup .brand__tagline{ max-width: 60ch; }
   .cf-signup .signup-right{ padding: 12px; border-radius: 18px; }
   .cf-signup .google-button{ padding: 10px 12px; font-size: .94rem; min-height: 46px; }
   .cf-signup .cta-note, .cf-signup .legal, .cf-signup .helper{ font-size: .86rem; }
   .cf-signup .back-button{ position: static; margin-top: 8px; }
 }
 
-/* Ultra-micro devices (≤320px) */
 @media (max-width: 320px){
   .cf-signup .signup-container{ max-width: 300px; }
   .cf-signup .brand__logo{ width: 26px; }
@@ -415,7 +405,7 @@
   .cf-signup .auth-headline{ font-size: clamp(16px, 6vw, 20px); }
 }
 
-/* Respect reduced motion */
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce){
   .cf-signup .google-button--google,
   .cf-signup .google-button--outline,
@@ -426,23 +416,36 @@
   }
 }
 
-/* High contrast users */
+/* High contrast */
 @media (prefers-contrast: more){
   .cf-signup .signup-right{ border-color:#cfd2dc; box-shadow:none; }
   .cf-signup .google-button--outline{ border-width: 3px; }
 }
 
-/* Optional dark mode */
+/* Dark mode */
 @media (prefers-color-scheme: dark){
   .cf-signup{
     --bg:#0f1115;
     --ink:#f4f6fb;
-    --card:#141824;
+    --card:#111524;
     --border:#242a3a;
     --accent-soft:#0f1a32;
   }
   .cf-signup .brand__tagline{ color:#b5bbca; }
-  .cf-signup .signup-right{ box-shadow: none; }
+
+  .cf-signup .signup-right{
+    /* tasteful glass in dark mode */
+    background: linear-gradient(180deg, rgba(22,26,44,.82), rgba(18,22,36,.82));
+    border: 1px solid #273049;
+    box-shadow: 0 24px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .cf-signup .signup-right::before{
+    background: linear-gradient(120deg, #314066, #3a4b78 60%, #314066 100%);
+    opacity:.55;
+  }
+
   .cf-signup .legal{ color:#aeb6c9; }
   .cf-signup .helper{ color:#b8bed0; }
   .cf-signup .pill-link{ color:#cfe0ff; }
