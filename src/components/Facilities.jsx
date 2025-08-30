@@ -7,12 +7,15 @@ import { CiDumbbell } from 'react-icons/ci';
 import { TbBrush } from 'react-icons/tb';
 import { GrTechnology } from 'react-icons/gr';
 import { MdProductionQuantityLimits } from 'react-icons/md';
+import { FiInfo, FiArrowRight } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 
 const Facilities = () => {
   // Reveal only once
   const [revealed, setRevealed] = useState(false);
   const containerRef = useRef(null);
   const hasTriggeredRef = useRef(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const el = containerRef.current;
@@ -38,14 +41,14 @@ const Facilities = () => {
           if (!hasTriggeredRef.current) {
             hasTriggeredRef.current = true;
             setRevealed(true);
-            io.disconnect(); // stop observing so we don't flicker
+            io.disconnect();
           }
         }
       },
       {
         root: null,
         threshold: [0, 0.12, 0.5, 1],
-        rootMargin: '0px 0px -20% 0px', // a little leeway at the bottom
+        rootMargin: '0px 0px -20% 0px',
       }
     );
 
@@ -116,16 +119,44 @@ const Facilities = () => {
         <h2 id="facilities-heading" className="facilities__title">
           One platform, endless possibilities
         </h2>
-        <p className="facilities__subtitle">
+
+        <p className="facilities__subtitle" id="facilities-subtitle">
           We craft creator-ready scripts across today’s highest-performing niches.
         </p>
 
-        <div className="cards" role="list">
+        {/* Legend chip: clarifies intent on mobile/desktop */}
+        <div className="legend-chip" role="note" aria-describedby="facilities-subtitle">
+          <FiInfo aria-hidden="true" />
+          <span>These tiles are examples of niches we support — not buttons.</span>
+        </div>
+
+        {/* Clear call to action */}
+        <div className="facilities__ctaRow" role="group" aria-label="Primary actions">
+          <button
+            className="fac-btn fac-btn--primary"
+            onClick={() => navigate('/target')}
+            aria-label="Start generating scripts"
+          >
+            Start generating <FiArrowRight aria-hidden="true" />
+          </button>
+
+          <button
+            className="fac-btn fac-btn--ghost"
+            onClick={() => navigate('/about')}
+            aria-label="Learn how CreatorFlow works"
+          >
+            How it works
+          </button>
+        </div>
+
+        <div className="cards" role="list" aria-label="Example niches">
           {cards.map((c, i) => (
             <article
               role="listitem"
+              aria-label={`${c.title} — example niche`}
               className="card"
               key={c.title}
+              tabIndex={-1} /* not focusable like a button */
               style={{
                 ['--accent']: c.accent,
                 ['--delay']: `${0.06 * (i + 1)}s`,
