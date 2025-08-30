@@ -424,3 +424,17 @@
     transition: none !important;
   }
 }
+
+/* --- FINAL MOBILE CENTER FIX --- */
+@media (max-width: 960px){
+  .cf-signup .signup-container{
+    grid-template-columns: 1fr !important;
+    justify-items: center !important; /* center items horizontally */
+  }
+  .cf-signup .signup-left,
+  .cf-signup .signup-right{
+    justify-self: center !important; /* force both to center */
+    width: 100%;
+    max-width: 540px; /* keep them readable */
+  }
+}
