@@ -7,8 +7,8 @@ import {
   menuOutline,
   closeOutline,
   logOutOutline,
-  timeOutline, // ⏱ icon for countdown
-  gridOutline, // dashboard icon
+  timeOutline,
+  gridOutline,
 } from 'ionicons/icons';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
@@ -41,11 +41,9 @@ const Navbar = () => {
   const [user, setUser] = useState(null);
   const [scrolled, setScrolled] = useState(false);
 
-  // Firestore source of truth
   const [plan, setPlan] = useState(null);
   const [credits, setCredits] = useState(null);
 
-  // refill countdown
   const [depletedAt, setDepletedAt] = useState(null);
   const [countdownMs, setCountdownMs] = useState(0);
   const tickRef = useRef(null);
@@ -53,9 +51,7 @@ const Navbar = () => {
   const hasAutoRefill = useMemo(() => AUTO_REFILL_PLANS.has(plan), [plan]);
   const navigate = useNavigate();
 
-  // ───────────────────────────────────────────────────────────
-  // Auth state + load plan/credits/depletedAt from Firestore
-  // ───────────────────────────────────────────────────────────
+  // Auth + user data
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser || null);
@@ -79,13 +75,7 @@ const Navbar = () => {
               : null;
 
           setPlan(p);
-          setCredits(
-            typeof data.credits === 'number'
-              ? data.credits
-              : p
-              ? PLAN_CREDITS[p]
-              : null
-          );
+          setCredits(typeof data.credits === 'number' ? data.credits : p ? PLAN_CREDITS[p] : null);
           setDepletedAt(toDateMaybe(data.creditDepletedAt));
         } else {
           setPlan(null);
@@ -101,9 +91,7 @@ const Navbar = () => {
     return unsub;
   }, []);
 
-  // ───────────────────────────────────────────────────────────
-  // Refill countdown ticker (only when plan supports auto-refill)
-  // ───────────────────────────────────────────────────────────
+  // Refill countdown
   useEffect(() => {
     const shouldRun = hasAutoRefill && credits === 0 && depletedAt instanceof Date;
     if (!shouldRun) {
@@ -124,7 +112,7 @@ const Navbar = () => {
     };
   }, [credits, depletedAt, hasAutoRefill]);
 
-  // navbar scroll styling
+  // Scroll styling
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
@@ -132,7 +120,7 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // close mobile drawer on resize (prevents stale open)
+  // Close drawer on resize
   useEffect(() => {
     const onResize = () => setMenuOpen(false);
     window.addEventListener('resize', onResize);
@@ -145,7 +133,6 @@ const Navbar = () => {
 
   const handleLogoutClick = async () => {
     try {
-      // clear any legacy hints (defensive)
       try {
         localStorage.removeItem('cf_selected_plan');
         localStorage.removeItem('cf_selected_plan_confirmed');
@@ -160,32 +147,23 @@ const Navbar = () => {
     }
   };
 
-  // Small helper to get a round avatar with initials
   const InitialAvatar = ({ nameOrEmail }) => {
     const ch = (nameOrEmail || '').trim()[0]?.toUpperCase() || 'U';
     return <div className="avatar-circle" aria-hidden="true">{ch}</div>;
   };
 
-  /** Plan chip
-   *  context: "bar" (top navbar) | "drawer" (mobile drawer)
-   */
   const PlanChip = ({ inline = false, context = 'bar' }) => {
     const hasPlanOrCredits = plan || typeof credits === 'number';
     if (!hasPlanOrCredits) return null;
 
     const planClass = plan ? `plan-${String(plan).toLowerCase()}` : 'plan-pro';
     const crTxt =
-      typeof credits === 'number'
-        ? `${credits} cr`
-        : plan
-        ? `${PLAN_CREDITS[plan]} cr`
-        : '';
+      typeof credits === 'number' ? `${credits} cr` : plan ? `${PLAN_CREDITS[plan]} cr` : '';
 
     const showCountdown = hasAutoRefill && credits === 0 && countdownMs > 0;
     const cdText = formatCountdown(countdownMs);
 
     if (context === 'drawer') {
-      // Drawer: stack plan & refill neatly (no awkward line wrap)
       return (
         <div className="plan-stack">
           <span
@@ -214,7 +192,6 @@ const Navbar = () => {
       );
     }
 
-    // Top bar version
     return (
       <span
         className={`plan-chip ${planClass} ${inline ? 'plan-inline' : ''}`}
@@ -241,7 +218,6 @@ const Navbar = () => {
     );
   };
 
-  // Primary nav links (desktop)
   const PrimaryLinks = () => (
     <nav className="primary-links" aria-label="Primary">
       <button className="nav-link" onClick={() => go('/plans')}>Get credits</button>
@@ -254,25 +230,25 @@ const Navbar = () => {
 
   return (
     <>
+      {/* Backdrop */}
       {menuOpen && <div className="nav-backdrop" onClick={closeMenu} aria-hidden="true" />}
 
       <nav className={`custom-navbar ${scrolled ? 'is-scrolled' : ''}`} role="navigation" aria-label="Main">
-        {/* Left: Logo + Mobile brand text */}
+        {/* Left */}
         <button className="navbar-logo" onClick={() => go('/')} aria-label="CreatorFlow home">
           <img src={logo} alt="CreatorFlow logo" className="logo-img" draggable="false" />
           <span className="navbar-brand-text">CreatorFlow</span>
         </button>
 
-        {/* Center (desktop only) */}
+        {/* Center */}
         <PrimaryLinks />
 
-        {/* Right cluster (desktop) */}
+        {/* Right (desktop) */}
         <div className="auth-desktop">
           <PlanChip inline context="bar" />
 
           {user ? (
             <>
-              {/* Explicit Dashboard button for discoverability */}
               <button
                 className="btn btn-primary"
                 onClick={() => go('/dashboard')}
@@ -283,7 +259,6 @@ const Navbar = () => {
                 <span>My Dashboard</span>
               </button>
 
-              {/* Username also routes to Dashboard */}
               <button
                 className="nav-link user-displayname"
                 onClick={() => go('/dashboard')}
@@ -306,7 +281,7 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Hamburger (ALWAYS last child so it sits on the far right on mobile) */}
+        {/* Hamburger */}
         <button
           className="hamburger"
           onClick={toggleMenu}
@@ -317,13 +292,12 @@ const Navbar = () => {
           <IonIcon icon={menuOpen ? closeOutline : menuOutline} />
         </button>
 
-        {/* Mobile drawer */}
+        {/* Drawer */}
         <aside
           id="mobile-drawer"
           className={`mobile-drawer ${menuOpen ? 'open' : ''}`}
           aria-hidden={menuOpen ? 'false' : 'true'}
         >
-          {/* Drawer header — centered & pretty */}
           <div className="drawer-card drawer-header">
             <InitialAvatar nameOrEmail={user?.displayName || user?.email} />
             <div className="drawer-identity">
@@ -332,7 +306,6 @@ const Navbar = () => {
               {!user && <div className="drawer-sub">Welcome to CreatorFlow</div>}
             </div>
 
-            {/* Big obvious Dashboard button (discoverable) */}
             {user ? (
               <button
                 className="btn btn-primary btn-block drawer-cta"
@@ -354,7 +327,6 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Plan / credits card */}
           <div className="drawer-card">
             <div className="drawer-plan-row">
               <PlanChip context="drawer" />
@@ -366,7 +338,6 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Links card */}
           <div className="drawer-card">
             <div className="drawer-links">
               <button className="nav-link nav-link--block" onClick={() => go('/about')}>About</button>
@@ -376,7 +347,6 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Logout card */}
           <div className="drawer-card drawer-bottom-pad">
             {user ? (
               <button className="btn btn-danger btn-block" onClick={handleLogoutClick}>
