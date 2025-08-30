@@ -101,7 +101,19 @@ const SignUpPage = () => {
             aria-live="polite"
             aria-busy={loading ? 'true' : 'false'}
           >
-            <h2 className="auth-headline">Sign up with Google</h2>
+            <div className="auth-top">
+              <h2 className="auth-headline">Sign up with Google</h2>
+              {/* Highly-visible login pill */}
+              <button
+                className="pill-link"
+                onClick={handleGoogleLogin}
+                disabled={loading}
+                aria-label="Log in with Google to your existing account"
+                title="Log in"
+              >
+                Log in
+              </button>
+            </div>
 
             {err ? (
               <div className="error-banner" role="alert">
@@ -109,19 +121,32 @@ const SignUpPage = () => {
               </div>
             ) : null}
 
-            {/* Primary (Google-compliant) */}
+            {/* Primary CTAs with shared halo */}
             <div className="cta-wrap">
-              <button
-                className="google-button google-button--google"
-                onClick={handleGoogleSignUp}
-                aria-label="Continue with Google to create a new account"
-                disabled={loading}
-              >
-                <img src={googleIcon} alt="" aria-hidden="true" />
-                Continue with Google
-              </button>
+              <div className="cta-grid">
+                <button
+                  className="google-button google-button--google"
+                  onClick={handleGoogleSignUp}
+                  aria-label="Continue with Google to create a new account"
+                  disabled={loading}
+                >
+                  <img src={googleIcon} alt="" aria-hidden="true" />
+                  Continue with Google
+                </button>
+
+                <button
+                  className="google-button google-button--outline"
+                  onClick={handleGoogleLogin}
+                  aria-label="Log in with Google to your existing account"
+                  disabled={loading}
+                >
+                  <img src={googleIcon} alt="" aria-hidden="true" />
+                  Log in with Google
+                </button>
+              </div>
+
               <div className="cta-note">
-                Google sign-up only for now.
+                Google sign-in only for now.
               </div>
             </div>
 
@@ -133,12 +158,9 @@ const SignUpPage = () => {
               We only access your name and email—no spam.
             </p>
 
-            <div className="divider" aria-hidden="true">
-              <hr /><span>OR</span><hr />
-            </div>
-
+            {/* Optional secondary helper (kept for accessibility & redundancy) */}
             <p className="helper">
-              Already have an account?{' '}
+              Already have an account?
               <button
                 className="text-link"
                 onClick={handleGoogleLogin}
