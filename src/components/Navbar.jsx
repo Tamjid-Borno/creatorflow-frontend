@@ -1,5 +1,5 @@
 // src/components/Navbar.jsx
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import './Navbar.css';
 import { IonIcon } from '@ionic/react';
 import {
@@ -8,6 +8,7 @@ import {
   closeOutline,
   logOutOutline,
   timeOutline, // ⏱ icon for countdown
+  gridOutline, // dashboard icon
 } from 'ionicons/icons';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
@@ -17,6 +18,7 @@ import logo from '../../src/logo.png';
 
 const PLAN_CREDITS = { Basic: 50, Pro: 200, Premium: 1000 };
 const REFILL_WINDOW_MS = 24 * 60 * 60 * 1000; // 24h
+const AUTO_REFILL_PLANS = new Set(['Pro', 'Premium']);
 
 function toDateMaybe(v) {
   if (!v) return null;
@@ -48,6 +50,7 @@ const Navbar = () => {
   const [countdownMs, setCountdownMs] = useState(0);
   const tickRef = useRef(null);
 
+  const hasAutoRefill = useMemo(() => AUTO_REFILL_PLANS.has(plan), [plan]);
   const navigate = useNavigate();
 
   // ───────────────────────────────────────────────────────────
@@ -99,10 +102,11 @@ const Navbar = () => {
   }, []);
 
   // ───────────────────────────────────────────────────────────
-  // Refill countdown ticker (only when credits === 0)
+  // Refill countdown ticker (only when plan supports auto-refill)
   // ───────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!(credits === 0 && depletedAt instanceof Date)) {
+    const shouldRun = hasAutoRefill && credits === 0 && depletedAt instanceof Date;
+    if (!shouldRun) {
       setCountdownMs(0);
       if (tickRef.current) {
         clearInterval(tickRef.current);
@@ -118,7 +122,7 @@ const Navbar = () => {
       if (tickRef.current) clearInterval(tickRef.current);
       tickRef.current = null;
     };
-  }, [credits, depletedAt]);
+  }, [credits, depletedAt, hasAutoRefill]);
 
   // navbar scroll styling
   useEffect(() => {
@@ -156,6 +160,12 @@ const Navbar = () => {
     }
   };
 
+  // Small helper to get a round avatar with initials
+  const InitialAvatar = ({ nameOrEmail }) => {
+    const ch = (nameOrEmail || '').trim()[0]?.toUpperCase() || 'U';
+    return <div className="avatar-circle" aria-hidden="true">{ch}</div>;
+  };
+
   /** Plan chip
    *  context: "bar" (top navbar) | "drawer" (mobile drawer)
    */
@@ -171,7 +181,7 @@ const Navbar = () => {
         ? `${PLAN_CREDITS[plan]} cr`
         : '';
 
-    const showCountdown = credits === 0 && countdownMs > 0;
+    const showCountdown = hasAutoRefill && credits === 0 && countdownMs > 0;
     const cdText = formatCountdown(countdownMs);
 
     if (context === 'drawer') {
@@ -195,7 +205,6 @@ const Navbar = () => {
               title="Auto-refill in 24h from depletion"
             >
               <IonIcon icon={timeOutline} aria-hidden="true" />
-              {/* Force text to be visible on small screens */}
               <span className="refill-text" style={{ whiteSpace: 'nowrap' }}>
                 Refills in {cdText}
               </span>
@@ -263,11 +272,22 @@ const Navbar = () => {
 
           {user ? (
             <>
-              {/* 👇 Profile button now routes to Dashboard */}
+              {/* Explicit Dashboard button for discoverability */}
+              <button
+                className="btn btn-primary"
+                onClick={() => go('/dashboard')}
+                title="Open Dashboard"
+                aria-label="Open Dashboard"
+              >
+                <IonIcon icon={gridOutline} aria-hidden="true" />
+                <span>My Dashboard</span>
+              </button>
+
+              {/* Username stays, but now clearly labeled as account */}
               <button
                 className="nav-link user-displayname"
                 onClick={() => go('/dashboard')}
-                title={user.displayName || user.email}
+                title="Open Dashboard"
               >
                 <IonIcon icon={personOutline} aria-hidden="true" />
                 <span className="user-text">{user.displayName || user.email}</span>
@@ -303,36 +323,66 @@ const Navbar = () => {
           className={`mobile-drawer ${menuOpen ? 'open' : ''}`}
           aria-hidden={menuOpen ? 'false' : 'true'}
         >
-          <div className="drawer-section">
-            <button className="nav-link" onClick={() => go('/plans')}>Get credits</button>
-            <button className="nav-link" onClick={() => go('/about')}>About</button>
-            <button className="nav-link" onClick={() => go('/terms')}>Terms &amp; Conditions</button>
-            <button className="nav-link" onClick={() => go('/privacy')}>Privacy Policy</button>
-            <button className="nav-link" onClick={() => go('/contact')}>Contact</button>
-          </div>
+          {/* Drawer header — centered & pretty */}
+          <div className="drawer-card drawer-header">
+            <InitialAvatar nameOrEmail={user?.displayName || user?.email} />
+            <div className="drawer-identity">
+              <div className="drawer-name">{user ? (user.displayName || user.email) : 'Guest'}</div>
+              {user && <div className="drawer-sub">Signed in</div>}
+              {!user && <div className="drawer-sub">Welcome to CreatorFlow</div>}
+            </div>
 
-          {/* Clean stacked presentation in the drawer */}
-          <div className="drawer-section">
-            <PlanChip context="drawer" />
-          </div>
-
-          <div className="drawer-section">
+            {/* Big obvious Dashboard button (discoverable) */}
             {user ? (
-              <>
-                <button
-                  className="nav-link user-displayname"
-                  onClick={() => go('/dashboard')}
-                  title={user.displayName || user.email}
-                >
-                  <IonIcon icon={personOutline} aria-hidden="true" />
-                  <span className="user-text user-text--drawer">{user.displayName || user.email}</span>
-                </button>
+              <button
+                className="btn btn-primary btn-block drawer-cta"
+                onClick={() => go('/dashboard')}
+                aria-label="Go to Dashboard"
+                title="Go to Dashboard"
+              >
+                <IonIcon icon={gridOutline} aria-hidden="true" />
+                <span>My Dashboard</span>
+              </button>
+            ) : (
+              <button
+                className="btn btn-primary btn-block drawer-cta"
+                onClick={() => go('/signup')}
+              >
+                <IonIcon icon={personOutline} aria-hidden="true" />
+                <span>Create account</span>
+              </button>
+            )}
+          </div>
 
-                <button className="btn btn-danger btn-block" onClick={handleLogoutClick}>
-                  <IonIcon icon={logOutOutline} aria-hidden="true" />
-                  <span>Logout</span>
-                </button>
-              </>
+          {/* Plan / credits card */}
+          <div className="drawer-card">
+            <div className="drawer-plan-row">
+              <PlanChip context="drawer" />
+            </div>
+            <div className="drawer-sep" aria-hidden="true" />
+            <div className="drawer-actions">
+              <button className="nav-link nav-link--block" onClick={() => go('/plans')}>Get credits</button>
+              <button className="nav-link nav-link--block" onClick={() => go('/plans')}>Manage plan</button>
+            </div>
+          </div>
+
+          {/* Links card */}
+          <div className="drawer-card">
+            <div className="drawer-links">
+              <button className="nav-link nav-link--block" onClick={() => go('/about')}>About</button>
+              <button className="nav-link nav-link--block" onClick={() => go('/terms')}>Terms &amp; Conditions</button>
+              <button className="nav-link nav-link--block" onClick={() => go('/privacy')}>Privacy Policy</button>
+              <button className="nav-link nav-link--block" onClick={() => go('/contact')}>Contact</button>
+            </div>
+          </div>
+
+          {/* Logout card */}
+          <div className="drawer-card">
+            {user ? (
+              <button className="btn btn-danger btn-block" onClick={handleLogoutClick}>
+                <IonIcon icon={logOutOutline} aria-hidden="true" />
+                <span>Logout</span>
+              </button>
             ) : (
               <button className="btn btn-primary btn-block" onClick={() => go('/signup')}>
                 <IonIcon icon={personOutline} aria-hidden="true" />
