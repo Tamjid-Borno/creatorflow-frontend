@@ -34,13 +34,13 @@
   padding-left:  calc(var(--page-gutter) + env(safe-area-inset-left, 0px));
   padding-right: calc(var(--page-gutter) + env(safe-area-inset-right, 0px));
 
-  overflow-x: hidden; /* prevents halo/gradients from causing sideways scroll */
+  overflow-x: hidden;
 }
 
 /* Two-column container */
 .cf-signup .signup-container{
-  width: min(1100px, 100%);      /* use % so it respects wrapper padding */
-  margin-inline: auto;           /* center it */
+  width: min(1100px, 100%);
+  margin-inline: auto;
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
   gap: clamp(12px, 2.8vw, 32px);
@@ -101,19 +101,51 @@
   min-height: 520px;
 
   max-width: 480px;
-  width: min(480px, 100%); /* stay centered & fluid on mobile */
-  margin-left: auto;       /* desktop alignment */
+  width: min(480px, 100%);
+  margin-left: auto;
 }
 
+/* Top row: headline + login pill (visible, high affordance) */
+.cf-signup .auth-top{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
 .cf-signup .auth-headline{
   font-family: var(--font-head);
   font-weight: 800;
   color: var(--ink);
   letter-spacing: -0.01em;
   font-size: clamp(18px, 2.6vw, 26px);
-  margin: 0 0 12px 0;
+  margin: 0;
   line-height: 1.15;
 }
+
+/* Highly-visible login pill (keeps logic; just calls handleGoogleLogin) */
+.cf-signup .pill-link{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 2px solid #2a62d5;
+  background: #edf3ff;
+  color: #1e47a8;
+  font-family: var(--font-head);
+  font-weight: 800;
+  letter-spacing: .2px;
+  cursor: pointer;
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease, color .16s ease;
+  will-change: transform, opacity;
+}
+.cf-signup .pill-link:hover{
+  background: #e6efff;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(42,98,213,.18);
+}
+.cf-signup .pill-link:disabled{ opacity: .6; cursor: not-allowed; }
 
 /* Error banner */
 .cf-signup .error-banner{
@@ -143,7 +175,15 @@
   opacity:.65;
 }
 
-/* Google-compliant button (white) */
+/* Two-button grid (prominent login) */
+.cf-signup .cta-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Google-compliant buttons */
 .cf-signup .google-button{
   display:inline-flex;
   align-items:center;
@@ -158,8 +198,8 @@
   cursor:pointer;
   transition: transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease, color .16s ease;
   text-align:center;
+  will-change: transform, opacity;
 }
-
 .cf-signup .google-button--google{
   background:#fff;
   color:#3c4043;
@@ -172,7 +212,20 @@
   transform: translateY(-1px);
   box-shadow:0 6px 18px rgba(0,0,0,.08);
 }
-.cf-signup .google-button--google:disabled{
+/* Secondary but equally noticeable login button */
+.cf-signup .google-button--outline{
+  background:#ffffff;
+  color:#1f3a8a;                          /* slightly stronger blue text */
+  border:2px solid #2a62d5;               /* bold outline to pop */
+  box-shadow:0 2px 10px rgba(42,98,213,.10);
+}
+.cf-signup .google-button--outline:hover{
+  background:#f7faff;
+  transform: translateY(-1px);
+  box-shadow:0 10px 24px rgba(42,98,213,.18);
+}
+.cf-signup .google-button--google:disabled,
+.cf-signup .google-button--outline:disabled{
   opacity:.7;
   cursor:not-allowed;
 }
@@ -185,6 +238,7 @@
   color:#8a8e97;
   font-family:var(--font-body);
   font-size:.9rem;
+  text-align: center;
 }
 
 /* Legal / trust copy */
@@ -203,21 +257,7 @@
 }
 .cf-signup .legal a:hover{ text-decoration:underline; }
 
-/* Divider */
-.cf-signup .divider{
-  display:grid;
-  grid-template-columns:1fr auto 1fr;
-  align-items:center;
-  gap:10px;
-  color:#a0a3ad;
-  margin:14px 0 8px 0;
-  user-select:none;
-}
-.cf-signup .divider hr{
-  border:0; border-top:1px solid #e4e6ee; height:0;
-}
-
-/* Secondary action: text link */
+/* Secondary helper */
 .cf-signup .helper{
   margin:0;
   color:#6a6f79;
@@ -249,6 +289,7 @@
   box-shadow:0 10px 24px rgba(2,152,102,.25);
   transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
   z-index: 10;
+  will-change: transform, opacity;
 }
 .cf-signup .back-button:hover{
   transform: translateY(-1px);
@@ -258,7 +299,9 @@
 
 /* Focus visibility (keyboard) */
 .cf-signup .google-button--google:focus-visible,
+.cf-signup .google-button--outline:focus-visible,
 .cf-signup .text-link:focus-visible,
+.cf-signup .pill-link:focus-visible,
 .cf-signup .back-button:focus-visible{
   outline: none;
   box-shadow: 0 0 0 4px rgba(42,98,213,.25), 0 0 0 6px rgba(42,98,213,.35);
@@ -275,7 +318,7 @@
     grid-template-columns: 1fr;
     gap: 16px;
     width: 100%;
-    max-width: 680px;          /* gentle max but respect wrapper gutter */
+    max-width: 680px;
     margin-inline: auto;
   }
   .cf-signup .signup-left{
@@ -289,25 +332,29 @@
 
   .cf-signup .signup-right{
     min-height: auto;
-    margin: 0 auto;            /* center the card on mobile */
+    margin: 0 auto;
     width: 100%;
-    max-width: 520px;          /* allow a bit wider on tablets */
+    max-width: 520px;
   }
 }
 
-/* Phones (≤560px): tighten paddings/typography a bit */
+/* Phones (≤560px): tighten paddings/typography and stack CTAs */
 @media (max-width: 560px){
   .cf-signup .signup-wrapper{ padding-block: max(10px, 3.5vw); }
   .cf-signup .brand__name{ font-size: clamp(20px, 7.2vw, 32px); }
   .cf-signup .brand__logo{ width: clamp(28px, 8vw, 44px); }
   .cf-signup .brand__tagline{ font-size: clamp(12px, 3.5vw, 14px); }
   .cf-signup .signup-right{ padding: clamp(14px, 4vw, 22px); }
-  .cf-signup .google-button--google{ padding: 12px 14px; font-size: .96rem; }
+
+  .cf-signup .cta-grid{ grid-template-columns: 1fr; } /* stack buttons */
+  .cf-signup .google-button--google,
+  .cf-signup .google-button--outline{ font-size: .96rem; padding: 12px 14px; }
+
   .cf-signup .legal, .cf-signup .helper{ font-size: .9rem; }
   .cf-signup .back-button{ left: 12px; bottom: 12px; padding: 7px 12px; }
 }
 
-/* Extra-small phones (≤420px): ensure symmetry & no overflow */
+/* Extra-small phones (≤420px) */
 @media (max-width: 420px){
   .cf-signup .signup-container{ max-width: 360px; }
   .cf-signup .brand{ gap: 10px; }
@@ -315,7 +362,6 @@
   .cf-signup .cta-wrap::before{ inset: -14px -6px -6px -6px; filter: blur(14px); }
   .cf-signup .google-button{ gap: 10px; }
   .cf-signup .google-button img{ width: 20px; height: 20px; }
-  .cf-signup .divider{ gap: 8px; }
   .cf-signup .signup-right{ max-width: 100%; }
 }
 
@@ -329,7 +375,7 @@
   .cf-signup .signup-right{ padding: 12px; border-radius: 18px; }
   .cf-signup .google-button{ padding: 10px 12px; font-size: .94rem; }
   .cf-signup .cta-note, .cf-signup .legal, .cf-signup .helper{ font-size: .86rem; }
-  .cf-signup .back-button{ position: static; margin-top: 8px; } /* avoid overlap on tiny screens */
+  .cf-signup .back-button{ position: static; margin-top: 8px; }
 }
 
 /* Ultra-micro devices (≤320px) */
@@ -338,14 +384,15 @@
   .cf-signup .brand__logo{ width: 26px; }
   .cf-signup .brand__name{ font-size: clamp(16px, 7.8vw, 24px); }
   .cf-signup .google-button{ font-size: .9rem; padding: 10px 10px; }
-  .cf-signup .divider{ gap: 6px; }
   .cf-signup .auth-headline{ font-size: clamp(16px, 6vw, 20px); }
 }
 
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce){
   .cf-signup .google-button--google,
+  .cf-signup .google-button--outline,
   .cf-signup .text-link,
+  .cf-signup .pill-link,
   .cf-signup .back-button{
     transition: none !important;
   }
@@ -354,7 +401,6 @@
 /* High contrast users */
 @media (prefers-contrast: more){
   .cf-signup .signup-right{ border-color:#cfd2dc; box-shadow:none; }
-  .cf-signup .divider hr{ border-top-color:#cfd2dc; }
 }
 
 /* Optional dark mode */
@@ -369,6 +415,4 @@
   .cf-signup .signup-right{ box-shadow: none; }
   .cf-signup .legal{ color:#aeb6c9; }
   .cf-signup .helper{ color:#b8bed0; }
-  .cf-signup .divider{ color:#8b90a3; }
-  .cf-signup .divider hr{ border-top-color:#2a3247; }
 }
