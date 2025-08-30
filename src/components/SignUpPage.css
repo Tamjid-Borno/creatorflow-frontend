@@ -340,3 +340,108 @@
   .cf-signup .google-button--google:hover,
   .cf-signup .google-button--google:active{ transform:none; }
 }
+
+/* ==== FINAL HARD FIX for the Google button ==== */
+/* Use GRID to kill baseline/descender wobble on all DPIs */
+.cf-signup .google-button{
+  box-sizing:border-box;
+  display:grid;                     /* <— key change */
+  grid-auto-flow:column;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+
+  width:100%;
+  min-height:56px;                  /* stable desktop height */
+  height:56px;
+  padding:0 22px;
+  border-radius:14px;
+  border:1px solid transparent;
+  cursor:pointer;
+
+  font-family:var(--font-head,"Sora",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif);
+  font-weight:700;                  /* 800 looks lumpy on Windows */
+  font-size:1.06rem;
+  line-height:1;                    /* no baseline inheritance */
+  letter-spacing:.1px;
+
+  /* crisp text on PC */
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+
+  /* smooth paint */
+  transform:translateZ(0);
+  backface-visibility:hidden;
+  transition:transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
+}
+
+/* Lock inner elements so nothing “drops” */
+.cf-signup .google-button > img{
+  width:22px; height:22px;
+  display:block;                    /* no inline baseline */
+  aspect-ratio:1/1;
+  object-fit:contain;
+  flex-shrink:0;
+}
+.cf-signup .google-button .btn-label{
+  line-height:1;                    /* exact vertical center */
+  white-space:nowrap;
+}
+
+/* White Google variant — flatter, less puffy */
+.cf-signup .google-button--google{
+  background:#FFFFFF;
+  color:#0E1330;
+  border-color:rgba(0,0,0,.12);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.92) inset,
+    0 10px 22px rgba(16,20,40,.12);
+}
+.cf-signup .google-button--google:hover{
+  transform:translateY(-1px);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.96) inset,
+    0 16px 30px rgba(16,20,40,.18);
+}
+.cf-signup .google-button--google:active{
+  transform:none;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.86) inset,
+    0 8px 16px rgba(16,20,40,.14);
+}
+
+/* Outline variant matches exact geometry */
+.cf-signup .google-button--outline{
+  background:linear-gradient(180deg,#11162F,#0C1430);
+  color:#E8F0FF;
+  border-color:rgba(102,224,255,.55);
+  box-shadow:0 10px 22px rgba(19,142,177,.16);
+}
+.cf-signup .google-button--outline:hover{
+  transform:translateY(-1px);
+  box-shadow:0 16px 28px rgba(19,142,177,.24);
+}
+
+/* Focus ring */
+.cf-signup .google-button:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 4px rgba(102,224,255,.28),
+    0 0 0 7px rgba(155,123,255,.30),
+    0 1px 0 rgba(255,255,255,.85) inset;
+  border-color:rgba(155,123,255,.55);
+}
+
+/* Mobile trims */
+@media (max-width:560px){
+  .cf-signup .google-button{ height:50px; min-height:50px; padding:0 16px; font-size:.96rem; gap:10px; }
+  .cf-signup .google-button > img{ width:20px; height:20px; }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .cf-signup .google-button{ transition:none !important; }
+  .cf-signup .google-button:hover,
+  .cf-signup .google-button:active{ transform:none !important; }
+}
