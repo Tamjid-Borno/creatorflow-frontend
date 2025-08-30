@@ -87,8 +87,9 @@ body { padding-top: var(--nav-h); }
   padding: clamp(8px, 1.4dvh, 12px) clamp(14px, 2.4dvh, 20px);
   border-radius: var(--radius-sm); border: 1.5px solid transparent;
   background: transparent; color: #fff; min-height: 38px; cursor: pointer;
-  transition: transform .16s ease, box-shadow .16s ease, background .16s ease, color .16s ease;
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease, color .16s ease, border-color .16s ease;
 }
+.btn:focus-visible{ outline: 2px solid #ffffff66; outline-offset: 2px; border-color: #ffffff55; }
 .btn-primary{ position: relative; isolation: isolate; }
 .btn-primary::before{
   content:""; position:absolute; inset:0; border-radius: inherit; padding:2px;
@@ -134,14 +135,19 @@ body { padding-top: var(--nav-h); }
 }
 @keyframes fadeIn { 0%{opacity:0} 100%{opacity:1} }
 
-/* Mobile drawer — centered, pretty cards */
+/* Mobile drawer — responsive width & height */
 .mobile-drawer{
-  position: fixed; top: var(--nav-h); right: 0; z-index: 10001;
-  width: min(360px, 92vw);
-  max-height: calc(100dvh - var(--nav-h) - 12px);
+  position: fixed; right: 0; z-index: 10001;
+  top: var(--nav-h);
+  /* Use dynamic viewport to avoid Safari toolbar bugs */
+  height: calc(100dvh - var(--nav-h) - env(safe-area-inset-bottom, 0px) - 8px);
+  width: min(420px, 94vw);
   overflow: auto;
+  overscroll-behavior: contain;
   display: flex; flex-direction: column; gap: 14px;
-  padding: 16px 14px; border-radius: 18px 0 0 18px;
+  padding: clamp(12px, 2.6vw, 18px);
+  border-radius: 18px 0 0 18px;
+
   background:
     radial-gradient(800px 480px at 100% -10%, rgba(var(--aurora-3), .12) 0%, transparent 60%),
     radial-gradient(900px 520px at -20% 110%, rgba(var(--aurora-2), .12) 0%, transparent 60%),
@@ -151,30 +157,40 @@ body { padding-top: var(--nav-h); }
 }
 .mobile-drawer.open{ transform: translateX(0); opacity: 1; }
 
+/* On very small phones, drawer becomes full-screen bottom sheet feel */
+@media (max-width: 420px){
+  .mobile-drawer{
+    left: 0; right: 0; margin: 0 auto;
+    width: 100vw; border-radius: 0;
+    height: calc(100dvh - var(--nav-h));
+  }
+}
+
 /* Drawer cards (glass) */
 .drawer-card{
   display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px;
-  padding: 14px; border-radius: 16px;
+  padding: clamp(12px, 2.2vw, 16px); border-radius: 16px;
   background: rgba(255,255,255,.06);
   border: 1px solid rgba(255,255,255,.14);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 10px 28px rgba(0,0,0,.28);
 }
+.drawer-bottom-pad{ padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); }
 
 /* Drawer header content */
-.drawer-header{ padding-top: 18px; }
+.drawer-header{ padding-top: clamp(10px, 1.8vh, 18px); }
 .avatar-circle{
-  width: 64px; height: 64px; border-radius: 999px;
+  width: clamp(52px, 9dvh, 72px); height: clamp(52px, 9dvh, 72px); border-radius: 999px;
   display: grid; place-items: center; font-weight: 800; font-family: var(--font-head);
-  color: #fff;
+  color: #fff; font-size: clamp(18px, 2.5dvh, 26px);
   background:
     radial-gradient(120% 120% at 20% 10%, rgba(var(--aurora-1), .7), rgba(var(--aurora-2), .7)),
     #342152;
   box-shadow: 0 10px 24px rgba(0,0,0,.35), 0 0 0 1.5px rgba(255,255,255,.12) inset;
 }
 .drawer-identity{ display:flex; flex-direction: column; gap: 4px; }
-.drawer-name{ font-weight: 800; font-size: 16px; letter-spacing: .2px; }
-.drawer-sub{ font-size: 12.5px; color: #cbd0dd; opacity: .9; }
+.drawer-name{ font-weight: 800; font-size: clamp(14px, 2.2dvh, 18px); letter-spacing: .2px; }
+.drawer-sub{ font-size: clamp(11px, 1.8dvh, 13px); color: #cbd0dd; opacity: .9; }
 .drawer-cta{ margin-top: 4px; }
 
 /* Plan/credits cluster */
@@ -185,18 +201,29 @@ body { padding-top: var(--nav-h); }
 /* Neat separator line */
 .drawer-sep{ width: 100%; height: 1px; background: rgba(255,255,255,.12); }
 
-/* Drawer action rows */
-.drawer-actions{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+/* Drawer action rows (responsive grid) */
+.drawer-actions{
+  display: grid; gap: 10px; width: 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 360px){
+  .drawer-actions{ grid-template-columns: 1fr; }
+}
+
 .drawer-links{ display: grid; grid-template-columns: 1fr; gap: 8px; width: 100%; }
+
+/* Block links/buttons inside cards */
 .nav-link--block{
   width: 100%; justify-content: center;
-  padding: 10px 12px; border-radius: 12px;
+  padding: clamp(9px, 1.8dvh, 12px) clamp(10px, 2vw, 14px);
+  border-radius: 12px;
   background: rgba(255,255,255,.06);
   border: 1px solid rgba(255,255,255,.12);
+  font-weight: 700;
 }
 .nav-link--block:hover{ background: rgba(255,255,255,.10); }
 
-/* Plan chip (unchanged base, slight polish) */
+/* Plan chip (base + polish) */
 .plan-chip{
   display: inline-flex; align-items: center; gap: 8px;
   padding: 8px 12px; border-radius: 999px; font-family: var(--font-head);
