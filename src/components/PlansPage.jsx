@@ -12,6 +12,8 @@ import { onAuthStateChanged } from "firebase/auth";
  * - UI:
  *    • "Current" when CONFIRMED matches the plan (scoped to current UID)
  *    • "Pending…" when PENDING matches the plan (and not yet confirmed)
+ * - NEW: If user is already on Pro/Premium and tries to switch to another plan,
+ *        ask for confirmation to cancel/modify current subscription before proceeding.
  */
 
 const planFeatures = {
@@ -148,6 +150,18 @@ export default function PlansPage() {
 
   const handleSelect = async (plan) => {
     if (!isValidPlan(plan)) return;
+
+    // 🔔 NEW: If already on Pro/Premium and switching to a different plan,
+    // ask for confirmation before proceeding (upgrade/downgrade or to Basic).
+    const isPaid = (p) => p === "Pro" || p === "Premium";
+    if (isPaid(confirmedPlan) && plan !== confirmedPlan) {
+      const ok = window.confirm(
+        `You're currently on ${confirmedPlan}. To switch to ${plan}, ` +
+        `you may need to cancel or modify your existing subscription. Continue?`
+      );
+      if (!ok) return;
+      // (Logic remains the same after user confirms.)
+    }
 
     // BASIC (free) — requires login to claim safely
     if (plan === "Basic") {
