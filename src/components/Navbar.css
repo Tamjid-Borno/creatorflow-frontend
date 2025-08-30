@@ -24,6 +24,12 @@
   --shadow-md: 0 10px 28px rgba(0,0,0,0.28);
 
   --nav-h: clamp(56px, 8dvh, 70px);
+
+  /* buttery motion */
+  --drawer-speed: 260ms;
+  --drawer-ease: cubic-bezier(.22,.61,.36,1); /* power-curve, fast start, smooth settle */
+  --backdrop-speed: 220ms;
+  --backdrop-ease: cubic-bezier(.22,.61,.36,1);
 }
 body { padding-top: var(--nav-h); }
 
@@ -36,8 +42,9 @@ body { padding-top: var(--nav-h); }
   color: var(--fg);
   background: rgba(10,12,20,0.40);
   border-bottom: 1px solid rgba(255,255,255,0.14);
+  /* blur is static (not animated) to avoid jank */
   backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
-  transition: background .25s ease, backdrop-filter .25s ease, border-color .25s ease, box-shadow .25s ease;
+  transition: background .25s ease, border-color .25s ease, box-shadow .25s ease;
 }
 .custom-navbar.is-scrolled {
   background: linear-gradient(180deg, rgba(7,2,14,0.78), rgba(7,2,14,0.50));
@@ -64,10 +71,10 @@ body { padding-top: var(--nav-h); }
   font-family: var(--font-body); color: #ffffff; text-decoration: none;
   font-size: clamp(13px, 1.8dvh, 17px);
   display: inline-flex; align-items: center; gap: 8px; padding: 6px 0;
-  background: none; border: 0; cursor: pointer; transition: color .2s ease, opacity .2s ease;
-  opacity: .95; white-space: nowrap;
+  background: none; border: 0; cursor: pointer; transition: color .2s ease, opacity .2s ease, transform .2s ease;
+  opacity: .95; white-space: nowrap; will-change: transform;
 }
-.nav-link:hover { color: #dcb3f2; opacity: 1; }
+.nav-link:hover { color: #dcb3f2; opacity: 1; transform: translateZ(0); }
 
 /* RIGHT */
 .auth-desktop{
@@ -88,6 +95,8 @@ body { padding-top: var(--nav-h); }
   border-radius: var(--radius-sm); border: 1.5px solid transparent;
   background: transparent; color: #fff; min-height: 38px; cursor: pointer;
   transition: transform .16s ease, box-shadow .16s ease, background .16s ease, color .16s ease, border-color .16s ease;
+  will-change: transform, opacity;
+  transform: translateZ(0);
 }
 .btn:focus-visible{ outline: 2px solid #ffffff66; outline-offset: 2px; border-color: #ffffff55; }
 .btn-primary{ position: relative; isolation: isolate; }
@@ -114,32 +123,34 @@ body { padding-top: var(--nav-h); }
 }
 .btn-block{ width: 100%; justify-content: center; }
 
-/* Hamburger pinned far-right */
+/* Hamburger (GPU hints) */
 .hamburger{
   display: none;
   background: rgba(255,255,255,0.06); border: 1px solid #ffffff22; border-radius: 12px;
   font-size: 1.45rem; color: #f5ebff; cursor: pointer; padding: 8px 10px; line-height: 0;
   transition: transform .14s ease, background .14s ease, border-color .14s ease;
+  will-change: transform;
+  transform: translateZ(0);
 }
-.hamburger:hover{ background: rgba(255,255,255,0.12); border-color:#ffffff44; transform: translateY(-1px); }
+.hamburger:hover{ background: rgba(255,255,255,0.12); border-color:#ffffff44; transform: translateY(-1px) translateZ(0); }
 
-/* Drawer backdrop */
+/* Backdrop — opacity only (cheap to animate) */
 .nav-backdrop{
   position: fixed; inset: 0; z-index: 999;
   background:
     radial-gradient(1200px 700px at 20% -10%, rgba(var(--aurora-2), .25) 0%, transparent 60%),
     radial-gradient(1200px 700px at 80% 110%, rgba(var(--aurora-1), .22) 0%, transparent 60%),
     rgba(0,0,0,0.58);
-  backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
-  animation: fadeIn .15s ease-out both;
+  opacity: 0;
+  transition: opacity var(--backdrop-speed) var(--backdrop-ease);
+  will-change: opacity;
 }
-@keyframes fadeIn { 0%{opacity:0} 100%{opacity:1} }
+.custom-navbar + .nav-backdrop { opacity: 1; }
 
-/* Mobile drawer — responsive width & height */
+/* Drawer — transform3d + opacity only (GPU-accelerated) */
 .mobile-drawer{
   position: fixed; right: 0; z-index: 10001;
   top: var(--nav-h);
-  /* Use dynamic viewport to avoid Safari toolbar bugs */
   height: calc(100dvh - var(--nav-h) - env(safe-area-inset-bottom, 0px) - 8px);
   width: min(420px, 94vw);
   overflow: auto;
@@ -152,12 +163,28 @@ body { padding-top: var(--nav-h); }
     radial-gradient(800px 480px at 100% -10%, rgba(var(--aurora-3), .12) 0%, transparent 60%),
     radial-gradient(900px 520px at -20% 110%, rgba(var(--aurora-2), .12) 0%, transparent 60%),
     #121216ee;
-  border: 1px solid #ffffff1a; box-shadow: var(--shadow-md);
-  transform: translateX(100%); opacity: 0; transition: transform .25s ease, opacity .25s ease;
-}
-.mobile-drawer.open{ transform: translateX(0); opacity: 1; }
+  border: 1px solid #ffffff1a;
+  /* keep shadow static; do not animate it */
+  box-shadow: var(--shadow-md);
 
-/* On very small phones, drawer becomes full-screen bottom sheet feel */
+  /* buttery animation */
+  transform: translate3d(100%,0,0);
+  opacity: 0.001; /* keeps layer composited without flicker */
+  transition:
+    transform var(--drawer-speed) var(--drawer-ease),
+    opacity var(--drawer-speed) var(--drawer-ease);
+  will-change: transform, opacity;
+  contain: layout paint style; /* isolates for perf */
+  backface-visibility: hidden;
+  pointer-events: none; /* prevent taps while animating closed */
+}
+.mobile-drawer.open{
+  transform: translate3d(0,0,0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Small phones: full-screen drawer */
 @media (max-width: 420px){
   .mobile-drawer{
     left: 0; right: 0; margin: 0 auto;
@@ -166,7 +193,7 @@ body { padding-top: var(--nav-h); }
   }
 }
 
-/* Drawer cards (glass) */
+/* Drawer cards (glass) — static visuals (no animated blur) */
 .drawer-card{
   display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px;
   padding: clamp(12px, 2.2vw, 16px); border-radius: 16px;
@@ -177,7 +204,7 @@ body { padding-top: var(--nav-h); }
 }
 .drawer-bottom-pad{ padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); }
 
-/* Drawer header content */
+/* Drawer header */
 .drawer-header{ padding-top: clamp(10px, 1.8vh, 18px); }
 .avatar-circle{
   width: clamp(52px, 9dvh, 72px); height: clamp(52px, 9dvh, 72px); border-radius: 999px;
@@ -198,10 +225,10 @@ body { padding-top: var(--nav-h); }
 .mobile-drawer .plan-chip.plan-full{ width: 100%; justify-content: center; }
 .mobile-drawer .refill-badge.refill-full{ width: 100%; justify-content: center; }
 
-/* Neat separator line */
+/* Separator */
 .drawer-sep{ width: 100%; height: 1px; background: rgba(255,255,255,.12); }
 
-/* Drawer action rows (responsive grid) */
+/* Drawer action rows */
 .drawer-actions{
   display: grid; gap: 10px; width: 100%;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -220,10 +247,11 @@ body { padding-top: var(--nav-h); }
   background: rgba(255,255,255,.06);
   border: 1px solid rgba(255,255,255,.12);
   font-weight: 700;
+  transform: translateZ(0); will-change: transform;
 }
 .nav-link--block:hover{ background: rgba(255,255,255,.10); }
 
-/* Plan chip (base + polish) */
+/* Plan chip */
 .plan-chip{
   display: inline-flex; align-items: center; gap: 8px;
   padding: 8px 12px; border-radius: 999px; font-family: var(--font-head);
@@ -232,22 +260,21 @@ body { padding-top: var(--nav-h); }
   box-shadow: 0 6px 18px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.06);
   backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   cursor: pointer; transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease, background .14s ease;
+  will-change: transform; transform: translateZ(0);
 }
-.plan-chip:hover{ transform: translateY(-1px); border-color:#ffffff40; background: rgba(255,255,255,.10); }
+.plan-chip:hover{ transform: translateY(-1px) translateZ(0); border-color:#ffffff40; background: rgba(255,255,255,.10); }
 .plan-chip .plan-dot{ width:8px; height:8px; border-radius: 999px; display:inline-block; background: var(--cosmic-g1); box-shadow: 0 0 12px rgba(165,92,255,.55); }
 .plan-chip .sep{ opacity:.65 }
 .plan-chip .cr{ opacity:.9; font-weight: 800; }
 .plan-basic .plan-dot{ background: #b2b2b2; box-shadow: 0 0 10px #b2b2b244; }
 .plan-pro .plan-dot{ background: var(--cosmic-g1); }
 .plan-premium .plan-dot{ background: #2aa4c7; box-shadow: 0 0 12px rgba(42,164,199,.55); }
-.plan-inline{ margin-right: 6px; }
 
 /* Refill badge */
 .refill-badge{
   display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; padding: 6px 10px; border-radius: 999px;
   font-family: var(--font-head); font-weight: 800; font-size: 12px; letter-spacing: .2px; color:#fff;
   background: rgba(255,255,255,.06); border: 1px solid #ffffff22; box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
 }
 .refill-soon{
   background: rgba(255, 106, 190, .12);
@@ -255,16 +282,14 @@ body { padding-top: var(--nav-h); }
   box-shadow: 0 0 0 1px rgba(255, 106, 190, .15), inset 0 1px 0 rgba(255,255,255,.06);
 }
 
-/* RESPONSIVE COLLISION GUARDS (top bar only) */
+/* RESPONSIVE COLLISION GUARDS */
 @media (max-width: 1400px){
   .primary-links{ gap: clamp(8px, 1.4vw, 18px); }
 }
 @media (max-width: 1300px){
-  /* Hide username TEXT only in the top bar; keep it in drawer */
   .custom-navbar .auth-desktop .user-displayname .user-text{ display:none; }
 }
 @media (max-width: 1220px){
-  /* Shorten plan label only in the top bar; drawer stays full */
   .custom-navbar .auth-desktop .plan-chip .sep,
   .custom-navbar .auth-desktop .plan-chip .plan-name{ display:none; }
   .custom-navbar .auth-desktop .plan-chip{ padding: 6px 10px; }
@@ -274,7 +299,7 @@ body { padding-top: var(--nav-h); }
   .hamburger{ display:inline-flex; margin-left: 6px; }
 }
 
-/* Tablet/Mobile: only show hamburger in the top bar (drawer contains the rest) */
+/* Tablet/Mobile */
 @media (max-width: 1024px){
   .auth-desktop > .btn,
   .auth-desktop > .nav-link,
@@ -282,7 +307,7 @@ body { padding-top: var(--nav-h); }
   .hamburger{ display:inline-flex; margin-left: 8px; }
 }
 
-/* Perf: reduce heavy blur on phones */
+/* Perf: reduce heavy blur on phones (navbar only) */
 @media (max-width: 768px){
   .custom-navbar{
     backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
@@ -292,7 +317,11 @@ body { padding-top: var(--nav-h); }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce){
-  .mobile-drawer, .hamburger, .btn { transition: none !important; }
+  :root{
+    --drawer-speed: 1ms;
+    --backdrop-speed: 1ms;
+  }
+  .mobile-drawer, .nav-backdrop, .hamburger, .btn { transition: none !important; }
 }
 
 /* Remove global nav offset on pages without a navbar */
