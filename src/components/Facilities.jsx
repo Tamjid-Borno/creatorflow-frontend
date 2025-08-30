@@ -36,7 +36,6 @@ const Facilities = () => {
 
     const io = new IntersectionObserver(
       ([entry]) => {
-        // Fire once; never toggle back to hidden
         if (entry.isIntersecting || entry.intersectionRatio > 0.12) {
           if (!hasTriggeredRef.current) {
             hasTriggeredRef.current = true;
@@ -124,7 +123,7 @@ const Facilities = () => {
           We craft creator-ready scripts across today’s highest-performing niches.
         </p>
 
-        {/* Legend chip: clarifies intent on mobile/desktop */}
+        {/* Centered legend chip */}
         <div className="legend-chip" role="note" aria-describedby="facilities-subtitle">
           <FiInfo aria-hidden="true" />
           <span>These tiles are examples of niches we support — not buttons.</span>
@@ -156,7 +155,7 @@ const Facilities = () => {
               aria-label={`${c.title} — example niche`}
               className="card"
               key={c.title}
-              tabIndex={-1} /* not focusable like a button */
+              tabIndex={-1}
               style={{
                 ['--accent']: c.accent,
                 ['--delay']: `${0.06 * (i + 1)}s`,
