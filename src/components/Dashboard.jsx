@@ -26,12 +26,17 @@ import {
   startAfter,
   getDocs,
   getCountFromServer,
+  updateDoc,
+  increment,
 } from "firebase/firestore";
 
 import "./Dashboard.css";
 
 const PAGE_SIZE = 12;
 const REFILL_WINDOW_MS = 24 * 60 * 60 * 1000; // 24h
+
+// Plans that actually auto-refill when credits hit 0.
+const AUTO_REFILL_PLANS = new Set(["Pro", "Premium"]);
 
 function formatDate(ts) {
   if (!ts) return "—";
@@ -75,6 +80,9 @@ export default function Dashboard() {
   const [active, setActive] = useState(null);
   const [toast, setToast] = useState("");
 
+  // Derived: does current plan auto-refill?
+  const hasAutoRefill = useMemo(() => AUTO_REFILL_PLANS.has(plan), [plan]);
+
   // ───────────────────────────────────────────
   // Auth + User doc
   // ───────────────────────────────────────────
@@ -94,6 +102,7 @@ export default function Dashboard() {
             : "Pro"
         );
         setCredits(typeof d.credits === "number" ? d.credits : 0);
+        // Only keep/observe depletedAt if it exists; refilling is gated below by hasAutoRefill.
         setDepletedAt(d.creditDepletedAt || null);
       } else {
         setPlan("Pro");
@@ -104,23 +113,24 @@ export default function Dashboard() {
     return off;
   }, []);
 
-  // refill countdown
+  // Refill countdown (only for plans that auto-refill)
   useEffect(() => {
-    if (!(credits === 0 && depletedAt)) {
+    if (!(hasAutoRefill && credits === 0 && depletedAt)) {
       setCountdownMs(0);
       return;
     }
-    const nextRefillAt = new Date(
-      (depletedAt.toDate ? depletedAt.toDate() : depletedAt).getTime() +
-        REFILL_WINDOW_MS
-    );
+    const baseTime =
+      (depletedAt?.toDate ? depletedAt.toDate() : depletedAt)?.getTime?.() ??
+      new Date(depletedAt).getTime();
+    const nextRefillAt = new Date(baseTime + REFILL_WINDOW_MS);
+
     const tick = () => {
       setCountdownMs(Math.max(0, nextRefillAt.getTime() - Date.now()));
     };
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [credits, depletedAt]);
+  }, [credits, depletedAt, hasAutoRefill]);
 
   // ───────────────────────────────────────────
   // Scripts (live first page) + count
@@ -216,12 +226,35 @@ export default function Dashboard() {
     URL.revokeObjectURL(url);
   };
 
+  // OPTIONAL: Ad-reward CTA handler (placeholder).
+  // Wire this to your ad SDK success callback and enforce daily caps on backend.
+  async function handleEarnCredits() {
+    if (!user) return;
+    try {
+      const uref = doc(db, "users", user.uid);
+      await updateDoc(uref, {
+        credits: increment(20),
+        // Clearing any old depletedAt prevents stray countdowns.
+        creditDepletedAt: null,
+      });
+      setCredits((c) => (typeof c === "number" ? c + 20 : 20));
+      setDepletedAt(null);
+      setToast("+20 credits added");
+      setTimeout(() => setToast(""), 1400);
+    } catch (e) {
+      setToast("Couldn’t add credits");
+      setTimeout(() => setToast(""), 1400);
+    }
+  }
+
   if (!user) {
     return (
       <div className="dash">
         <header className="dash__header">
           <div>
-            <h1 className="dash__title">Dashboard</h1>
+            <h1 className="dash__title">
+              Dashboard <span role="img" aria-label="sparkles">✨</span>
+            </h1>
             <p className="dash__subtitle">Please sign in to view your scripts.</p>
           </div>
           <div className="dash__headActions">
@@ -232,15 +265,20 @@ export default function Dashboard() {
         </header>
       </div>
     );
-    }
+  }
 
   return (
     <div className="dash">
       {/* Header */}
       <header className="dash__header">
         <div>
-          <h1 className="dash__title">Hey, {user.displayName || user.email} <span role="img" aria-label="sparkles">✨</span></h1>
-          <p className="dash__subtitle">Manage your plan and see every script you generated.</p>
+          <h1 className="dash__title">
+            Hey, {user.displayName || user.email}{" "}
+            <span role="img" aria-label="sparkles">✨</span>
+          </h1>
+          <p className="dash__subtitle">
+            Manage your plan and see every script you generated.
+          </p>
         </div>
         <div className="dash__headActions">
           <button className="btn btn--ghost" onClick={() => window.location.reload()}>
@@ -267,14 +305,43 @@ export default function Dashboard() {
         <article className="kpi kpi--credits">
           <div className="kpi__label">Credits</div>
           <div className="kpi__value">{credits ?? "—"}</div>
-          {credits === 0 && depletedAt && (
-            <div className={`kpi__sub`}>
-              <span className={`refill-chip ${countdownMs < 3600_000 ? "refill-chip--soon" : ""}`}>
-                Refills in {formatCountdown(countdownMs)}
-              </span>
+
+          {/* When 0 credits */}
+          {credits === 0 && (
+            <div className="kpi__sub">
+              {hasAutoRefill && depletedAt ? (
+                <span
+                  className={`refill-chip ${
+                    countdownMs < 3600_000 ? "refill-chip--soon" : ""
+                  }`}
+                >
+                  Refills in {formatCountdown(countdownMs)}
+                </span>
+              ) : (
+                <>
+                  <span className="kpi__muted">
+                    {plan === "Basic" ? "No auto-refill on Basic." : "Refill not scheduled."}
+                  </span>
+                  {/* OPTIONAL: ad-reward CTA */}
+                  <div className="kpi__quickRow" style={{ marginTop: 8 }}>
+                    <button className="pill" onClick={handleEarnCredits}>
+                      Earn +20
+                    </button>
+                    <button className="pill" onClick={() => navigate("/plans")}>
+                      Upgrade
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           )}
-          {credits > 0 && <div className="kpi__sub">Auto-refills when balance hits 0</div>}
+
+          {/* When > 0 credits */}
+          {credits > 0 && (
+            <div className="kpi__sub">
+              {hasAutoRefill ? "Auto-refills when balance hits 0" : "No auto-refill on Basic"}
+            </div>
+          )}
         </article>
 
         <article className="kpi kpi--quick">
