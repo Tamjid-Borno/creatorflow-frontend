@@ -377,3 +377,36 @@
     transition: none !important;
   }
 }
+
+/* === CTA breathing room fix (override) === */
+.cf-signup .signup-right{
+  /* give the whole card a bit more air on the sides */
+  padding-inline: clamp(24px, 3.5vw, 36px) !important;
+  padding-block: clamp(18px, 2.6vw, 28px) !important;
+  min-inline-size: 0; /* avoid overflow artifacts */
+}
+
+/* contain the grid so buttons don't kiss the border */
+.cf-signup .cta-wrap{
+  margin: 14px 0 8px !important;
+  padding-inline: clamp(6px, 1.2vw, 12px) !important;  /* NEW */
+}
+
+/* wider gap between the two buttons + inner padding buffer */
+.cf-signup .cta-grid{
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(12px, 1.6vw, 18px) !important;
+  padding-inline: clamp(4px, 0.9vw, 10px) !important;   /* NEW */
+}
+
+/* buttons themselves stay comfy at any width */
+.cf-signup .google-button{
+  height: clamp(48px, 6.2vh, 54px) !important;
+  padding-inline: clamp(14px, 1.4vw, 18px) !important;
+}
+
+/* phones: stack the buttons, remove extra side padding */
+@media (max-width: 560px){
+  .cf-signup .cta-grid{ grid-template-columns: 1fr; padding-inline: 0 !important; }
+  .cf-signup .signup-right{ padding: clamp(16px, 4.6vw, 24px) !important; }
+}
