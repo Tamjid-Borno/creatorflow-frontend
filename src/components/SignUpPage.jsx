@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './SignUpPage.css';
 import googleIcon from '../assets/google.png';
-import brandLogo from '../logo.png'; // update if your logo path differs
+import brandLogo from '../logo.png';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { useNavigate } from 'react-router-dom';
@@ -103,8 +103,8 @@ const SignUpPage = () => {
           >
             <div className="auth-top">
               <h2 className="auth-headline">Sign up with Google</h2>
-              {/* Highly-visible login pill */}
               <button
+                type="button"
                 className="pill-link"
                 onClick={handleGoogleLogin}
                 disabled={loading}
@@ -125,23 +125,25 @@ const SignUpPage = () => {
             <div className="cta-wrap">
               <div className="cta-grid">
                 <button
+                  type="button"
                   className="google-button google-button--google"
                   onClick={handleGoogleSignUp}
                   aria-label="Continue with Google to create a new account"
                   disabled={loading}
                 >
                   <img src={googleIcon} alt="" aria-hidden="true" />
-                  Continue with Google
+                  <span className="btn-label">Continue with Google</span>
                 </button>
 
                 <button
+                  type="button"
                   className="google-button google-button--outline"
                   onClick={handleGoogleLogin}
                   aria-label="Log in with Google to your existing account"
                   disabled={loading}
                 >
                   <img src={googleIcon} alt="" aria-hidden="true" />
-                  Log in with Google
+                  <span className="btn-label">Log in with Google</span>
                 </button>
               </div>
 
@@ -158,10 +160,11 @@ const SignUpPage = () => {
               We only access your name and email—no spam.
             </p>
 
-            {/* Optional secondary helper (kept for accessibility & redundancy) */}
+            {/* Optional secondary helper */}
             <p className="helper">
               Already have an account?
               <button
+                type="button"
                 className="text-link"
                 onClick={handleGoogleLogin}
                 disabled={loading}
@@ -174,6 +177,7 @@ const SignUpPage = () => {
         </div>
 
         <button
+          type="button"
           className="back-button"
           onClick={() => window.history.back()}
           aria-label="Go back"
