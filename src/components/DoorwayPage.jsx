@@ -206,6 +206,9 @@ function DoorwayPage() {
             followerCount,
             tone,
             moreSpecific: moreSpecific?.trim() || "",
+            // ✅ Necessary addition for Premium stepwise detection
+            uid: user.uid,
+            email: user.email,
           }),
         }
       );
@@ -329,7 +332,7 @@ function DoorwayPage() {
             loading="lazy"
             decoding="async"
           />
-          <h1>CreatorFlow</h1>
+        <h1>CreatorFlow</h1>
         </div>
 
         <div className="foreground-card">
