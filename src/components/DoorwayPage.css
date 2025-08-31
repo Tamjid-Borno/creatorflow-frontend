@@ -26,14 +26,15 @@
   --header-pad-top: clamp(8px, 1.4vw, 14px);
   --header-pad-bottom: clamp(6px, 1.2vw, 12px);
 
-  /* RESERVED SPACE so the fixed bottom card never overlaps content */
-  --card-reserve: clamp(260px, 42svh, 520px);
+  /* ⬆️ Increased to reserve more space for the taller fixed card */
+  --card-reserve: clamp(320px, 56svh, 780px);
 }
 
 /* Desktop/laptop: a bit more reserve (taller card) */
 @media (min-width: 981px) {
   :root {
-    --card-reserve: clamp(420px, 58vh, 820px);
+    /* ⬆️ Give desktop more breathing room for a taller script area */
+    --card-reserve: clamp(520px, 70vh, 1200px);
   }
 }
 
@@ -230,8 +231,11 @@
    ========================= */
 .inside-card{
   background: transparent; border-radius:10px; width:100%; margin:0 auto;
-  min-height: clamp(150px, 26vh, 300px);
-  max-height: clamp(220px, 52vh, 560px);
+
+  /* ⬆️ Taller reading window by default */
+  min-height: clamp(220px, 38vh, 520px);
+  max-height: clamp(360px, 70vh, 980px);
+
   overflow-y:auto;
   font-family:"Raleway", sans-serif; color:#F2F4FF; font-size:1.04rem; line-height:1.8;
   padding:1rem 1rem 1.1rem;
@@ -244,14 +248,17 @@
 @media (max-width:980px){
   .inside-card{
     font-size:1rem; line-height:1.7;
-    /* fixed card stays; we keep a reasonable reading window */
-    max-height: clamp(220px, 52svh, 560px);
+
+    /* ⬆️ Taller on tablets/large phones too */
+    max-height: clamp(300px, 66svh, 820px);
   }
 }
 @media (max-width:480px){
   .inside-card{
     font-size:.95rem; line-height:1.6;
-    max-height: clamp(200px, 52svh, 520px);
+
+    /* ⬆️ Taller on small phones */
+    max-height: clamp(280px, 64svh, 760px);
     padding:12px;
   }
 }
@@ -376,7 +383,8 @@
 .script-grid{ display:flex !important; flex-direction:column !important; gap:var(--sb-gap) !important }
 .script-box{
   background:transparent !important; border:none !important; box-shadow:none !important;
-  padding:var(--sb-pad); margin:0; width:100%; max-width:100%; content-visibility:auto; contain-intrinsic-size:220px
+  padding:var(--sb-pad); margin:0; width:100%; max-width:100%;
+  content-visibility:auto; contain-intrinsic-size:320px; /* ⬆️ larger pre-allocated height */
 }
 .script-box__label{
   display:inline-block; padding:clamp(4px,.6vw,6px) clamp(8px,1.4vw,12px);
