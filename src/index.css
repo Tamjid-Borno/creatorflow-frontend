@@ -1,0 +1,141 @@
+/* ─────────────────────────────────────────────
+   Tailwind layers FIRST (keeps Preflight order)
+   ───────────────────────────────────────────── */
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* ─────────────────────────────────────────────
+   Base Reset / App Tokens
+   ───────────────────────────────────────────── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Cosmic palette (matches cosmic.css) */
+  --ink: #EEF0FF;
+  --muted: #CBD0DD;
+  --violet: #8B6EF6;
+  --magenta: #FF66C4;
+  --cyan: #6AA8FF;
+  --green: #58F07A;
+
+  /* Keep your old gradient vars (used elsewhere).
+     We set them to the cosmic dark base so any legacy usage stays on-brand. */
+  --gradient-background-start: #0B0114;
+  --gradient-background-end:   #141824;
+
+  /* Animation names as variables (optional) */
+  --animate-first: moveVertical 30s ease infinite;
+  --animate-second: moveInCircle 20s reverse infinite;
+  --animate-third: moveInCircle 40s linear infinite;
+  --animate-fourth: moveHorizontal 40s ease infinite;
+  --animate-fifth: moveInCircle 20s ease infinite;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+/* IMPORTANT:
+   Make body transparent so the fixed CosmicBackground can crossfade behind it. */
+body {
+  background: transparent !important;
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Optional fallback:
+   If you want a background when CosmicBackground isn’t mounted yet,
+   add class "fallback-cosmic" on <body> temporarily. */
+body.fallback-cosmic {
+  background: linear-gradient(
+    to bottom right,
+    var(--gradient-background-start),
+    var(--gradient-background-end)
+  ) !important;
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Your Animation Keyframes (kept & tidied)
+   ───────────────────────────────────────────── */
+@keyframes moveHorizontal {
+  0%   { transform: translateX(-50%) translateY(-10%); }
+  50%  { transform: translateX( 50%) translateY( 10%); }
+  100% { transform: translateX(-50%) translateY(-10%); }
+}
+
+@keyframes moveInCircle {
+  0%   { transform: rotate(0deg); }
+  50%  { transform: rotate(180deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes moveVertical {
+  0%   { transform: translateY(-50%); }
+  50%  { transform: translateY( 50%); }
+  100% { transform: translateY(-50%); }
+}
+
+/* ─────────────────────────────────────────────
+   Optional Utilities (handy but non-blocking)
+   ───────────────────────────────────────────── */
+
+/* Gradient overlay helper you can attach to decorative divs */
+.gradient-overlay {
+  position: absolute;
+  inset: -20% -20% -20% -20%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(48px) saturate(110%);
+  opacity: 0.35;
+  background-image:
+    radial-gradient(50% 35% at 20% 25%, rgba(139,110,246,.18), transparent 70%),
+    radial-gradient(45% 30% at 78% 30%, rgba(106,168,255,.16), transparent 70%),
+    radial-gradient(35% 30% at 45% 80%, rgba(255,102,196,.12), transparent 70%);
+  background-repeat: no-repeat;
+  animation: var(--animate-third);
+}
+
+/* If you use glass surfaces outside Tailwind */
+.glass {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.14);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+
+/* If you want a consistent CTA gradient without writing Tailwind classes */
+.btn-gradient {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  color: #0B0114;
+  background-image: linear-gradient(135deg, var(--magenta), var(--violet), var(--cyan));
+  border: none;
+  text-decoration: none;
+}
+.btn-gradient:focus-visible {
+  outline: 2px solid rgba(139,110,246,.6);
+  outline-offset: 2px;
+}

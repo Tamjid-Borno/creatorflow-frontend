@@ -1,0 +1,250 @@
+/* ===== Page background + optional navbar blend (scoped to this page only) ===== */
+body.landing-mobile {
+  /* NEW: vertical gradient top (#000015) → bottom (#0e002e) */
+  background: linear-gradient(#000015, #0e002e) !important;
+  color: #EEF0FF;
+}
+body.landing-mobile .custom-navbar {
+  background: rgba(0, 0, 21, 0.65);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+/* ===================== Root screen — NO CARD. Everything on background. ===================== */
+.m-screen{
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+  padding: calc(64px + var(--safe-top)) 16px calc(24px + var(--safe-bot));
+
+  min-height: 100dvh;
+  /* Match body gradient exactly */
+  background: linear-gradient(#000015, #0e002e);
+  color: #EEF0FF;
+
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 1.5vh, 22px);
+
+  position: relative;
+  isolation: isolate;
+  z-index: 0;
+  overflow: hidden;
+
+  content-visibility: auto;
+  contain-intrinsic-size: 800px 1200px;
+}
+
+/* starfield (very subtle) */
+.m-screen::before{
+  content: "";
+  position: absolute; inset: 8px 0;
+  z-index: -1; pointer-events: none;
+  background-image:
+    radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.25), transparent),
+    radial-gradient(1.5px 1.5px at 70% 15%, rgba(255,255,255,.18), transparent),
+    radial-gradient(1.5px 1.5px at 85% 60%, rgba(255,255,255,.16), transparent),
+    radial-gradient(2px 2px at 35% 75%, rgba(255,255,255,.2), transparent);
+}
+
+/* ===================== HERO — centered ===================== */
+.m-hero{
+  margin: 0 auto;
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  --copy-col: clamp(290px, 92vw, 560px);
+}
+
+.m-copy{
+  width: 100%;
+  max-width: var(--copy-col);
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* NEW: bigger headline + gradient spans for “Scripts” and “Actually Work” */
+.m-h1{
+  font-family: "Sora", system-ui;
+  font-weight: 800;
+  font-size: clamp(34px, 6.4vw + 6px, 56px); /* ↑ bigger */
+  line-height: 1.05;
+  letter-spacing: .2px;
+  margin: clamp(2px, 0.5vh, 6px) 0 clamp(10px, 1.6vh, 16px);
+  width: 100%;
+  opacity: .95;
+}
+
+/* gradient text style (professional/aesthetic, matches your UI accents) */
+.m-grad{
+  /* fallback solid color first for older browsers */
+  color: #EDEAFF;
+  background:
+    linear-gradient(135deg, #8e6ffe , #8055f8 , #fcda76, #fc6f95, #cb41ec );
+  -webkit-background-clip: text;
+          background-clip: text;
+  color: transparent;
+  /* subtle glow to make it pop on dark bg */
+  text-shadow: 0 0 14px rgba(139,110,246,.18);
+}
+
+/* Larger subheading */
+.m-sub{
+  color: #AEB4C4;
+  font-size: clamp(12px, 1.1rem + 1vw, 18px); /* ↑ bigger */
+  line-height: 1.65;
+  margin: 0 0 clamp(16px, 1.8vh, 22px);
+  width: 100%;
+}
+
+/* ===================== CTAs ===================== */
+.m-actions{
+  --cta-gap: clamp(8px, 1.8vw, 12px);
+  width: min(70%, 620px);
+  display: flex;
+  justify-content: center;
+  gap: var(--cta-gap);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.m-cta-primary,
+.m-cta-ghost{
+  flex: 1;
+  min-width: 44%;
+  padding: clamp(12px, 2.2vw, 16px) clamp(14px, 2.6vw, 18px);
+  border-radius: clamp(12px, 2.6vw, 16px);
+  font-weight: 800;
+}
+
+.m-cta-primary{
+  border: 0;
+  color: #ffffff;
+  background: linear-gradient(135deg, #ec11fb, #fe5867);
+  box-shadow: 0 8px 24px rgba(236, 17, 251, .25);
+}
+.m-cta-primary:disabled { opacity: .8; }
+
+.m-cta-ghost{
+  background: transparent;
+  color: #EEF0FF;
+  font-weight: 700;
+  border: 1px solid rgba(255,255,255,.16);
+}
+
+/* Stack the CTAs on very narrow screens */
+@media (max-width: 360px){
+  .m-actions{
+    width: min(96vw, var(--copy-col));
+    flex-direction: column;
+  }
+  .m-cta-primary, .m-cta-ghost{ min-width: 100%; }
+}
+
+/* ===================== Planet + rotated gradient glow ===================== */
+.m-planet-wrap{
+  position: relative;
+  width: clamp(240px, 68vw, 380px);
+  margin: clamp(18px, 2.2vh, 28px) auto clamp(8px, 1.2vh, 14px);
+  isolation: isolate;
+}
+.m-planet-wrap::before{
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 140%; height: 80%;
+  transform: translate(-50%, -50%) rotate(-25deg);
+  transform-origin: center;
+  background: linear-gradient(90deg, #2a0a47 0%, #0f0a53 100%); /* tuned to new bg */
+  filter: blur(38px);
+  opacity: 0.9;
+  border-radius: 999px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.m-planet,
+.m-planet-svg{
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 20px 60px rgba(0,0,0,.18));
+  opacity: .95;
+}
+
+/* ===================== Feature grid ===================== */
+.m-feature-group{
+  --fg-gap: clamp(10px, 2.6vw, 20px);
+
+  margin: 6px auto 0;
+  padding: clamp(10px, 2.2vw, 14px);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--fg-gap);
+  width: 100%;
+  max-width: 700px;
+
+  background: rgb(255 255 255 / 4%);
+  border-radius: clamp(14px, 3.2vw, 18px);
+}
+
+@media (max-width: 340px){
+  .m-feature-group{ grid-template-columns: repeat(2, 1fr); }
+}
+
+.m-feature{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: clamp(6px, 1.6vw, 10px);
+  border-radius: clamp(10px, 2.6vw, 12px);
+  background: rgb(255 255 255 / 4%);
+  border: 1px solid rgba(255, 255, 255, .08);
+}
+
+.m-feature-ico{
+  --icon-box: clamp(36px, 8.5vw, 52px);
+  --icon:     clamp(28px, 6.8vw, 40px);
+  width: var(--icon-box);
+  height: var(--icon-box);
+  display: grid; place-items: center;
+  border-radius: 12px;
+  background: transparent;
+}
+.m-feature-ico img{
+  width: var(--icon);
+  height: var(--icon);
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+.m-feature-txt{
+  font-size: clamp(11px, 2.8vw, 13px);
+  color: #EEF0FF;
+  opacity: .92;
+}
+
+/* ===================== Responsive polish ===================== */
+@media (min-width: 430px){
+  .m-h1{ font-size: clamp(38px, 5.4vw + 10px, 60px); } /* ↑ bigger on wider phones */
+}
+
+/* High-contrast users */
+@media (prefers-contrast: more){
+  .m-sub{ color: #D7DBE7; }
+  .m-cta-ghost{ border-color: rgba(255,255,255,.22); }
+}
+
+/* Motion safe */
+@media (prefers-reduced-motion: reduce){
+  *{ animation: none !important; transition: none !important; }
+}
+
+/* perf-low blur reduction (optional) */
+@media (max-width: 768px) {
+  .m-screen .m-card { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(7,2,14,0.9) !important; }
+  .m-screen { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+}

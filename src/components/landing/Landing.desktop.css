@@ -1,0 +1,421 @@
+/* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300..900&family=Sora:wght@400;500;600;700;800&display=swap');
+
+/* ======================
+   Fluid Design Tokens
+   ====================== */
+:root{
+  --bg: #0b0114;
+  --fg: #ffffff;
+  --accent: #a83dd5;
+  --card: #150424;
+  --glass: rgba(255,255,255,0.07);
+  --glass-blur: 12px;
+
+  /* font tokens */
+  --font-head: "Sora", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+
+  /* fluid spacing scale */
+  --space-1: clamp(6px, 0.6dvh, 10px);
+  --space-2: clamp(10px, 1.2dvh, 16px);
+  --space-3: clamp(14px, 1.8dvh, 22px);
+  --space-4: clamp(18px, 2.4dvh, 28px);
+  --space-5: clamp(24px, 3.2dvh, 36px);
+  --space-6: clamp(30px, 4.2dvh, 48px);
+
+  --radius: 20px;
+  --radius-sm: 14px;
+
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.25);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,0.35);
+
+  /* CTA colors (vibrant cosmic) */
+  --cta-bg: linear-gradient(135deg, #ff3cac 0%, #784ba0 50%, #2b86c5 100%);
+  --cta-bg-hover: linear-gradient(135deg, #ff66c4 0%, #8e61c2 50%, #3e9bdd 100%);
+}
+
+/* Base */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--font-body);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+/* Background image + overlays */
+.landing-root {
+  position: relative;
+  min-height: 100dvh;
+  background-image: url('../../assets/background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  isolation: isolate;
+}
+
+/* iOS fixes: avoid jank with fixed backgrounds */
+@media (max-width: 900px) {
+  .landing-root { background-attachment: scroll; }
+}
+
+.landing-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(1200px 600px at 70% 20%, #7a2cb033 0%, transparent 60%),
+    linear-gradient(180deg, #000000a6 0%, #00000000 30%, #000000b0 100%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Main container */
+.landing-container {
+  position: relative;
+  z-index: 1;
+  padding: max(var(--space-5), 4dvh) max(var(--space-4), 3dvw);
+
+  content-visibility: auto;
+  contain-intrinsic-size: 800px 1200px;
+}
+
+/* ======================
+   Responsive Grid
+   ====================== */
+.grid-container {
+  display: grid;
+  gap: clamp(18px, 4dvh, 56px);
+  max-width: min(1300px, 94vw);   /* aligns with Facilities */
+  margin: 0 auto;
+  padding-inline: min(2dvw, 24px);
+  grid-template-columns: 1.1fr 1fr;
+  container-type: inline-size;
+
+  content-visibility: auto;
+  contain-intrinsic-size: 800px 1200px;
+}
+
+/* Container query: default mobile = illustration-first */
+@container (max-width: 900px) {
+  .grid-container { grid-template-columns: 1fr; }
+  .right-box { order: 1; }  /* image FIRST on mobile */
+  .left-box  { order: 2; align-items: center; text-align: center; }
+}
+
+/* Handle ultrawide (keeps text readable, image bigger) */
+@container (min-width: 1200px) {
+  .box-image { max-width: min(640px, 48vw); }
+}
+
+/* Boxes */
+.grid-box { width: 100%; height: 100%; }
+
+.left-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  text-align: left;
+  animation: slideUpFade 700ms ease-out both;
+  animation-delay: 120ms;
+}
+
+/* Right image box with subtle float when visible */
+.right-box {
+  display: grid;
+  place-items: center;
+  padding: var(--space-5);
+  opacity: 0;
+  transform: translateY(30px);
+  will-change: transform, opacity;
+  animation: slideUpFade 700ms ease-out both;
+  animation-delay: 260ms;
+}
+.right-box.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  animation: none;
+}
+.right-box.is-visible .box-image {
+  animation: floatUpDown 3.8s ease-in-out infinite;
+  animation-delay: 300ms;
+}
+
+/* Hero image (desktop baseline) */
+.box-image {
+  width: min(560px, 100%);
+  max-height: 70dvh;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  border-radius: 12px;
+  user-select: none;
+  filter: drop-shadow(var(--shadow-md));
+}
+
+/* ======================
+   Fluid Typography
+   ====================== */
+.headline {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: clamp(30px, 4.8dvw, 60px);
+  line-height: 1.06;
+  margin: 0 0 8px 0;
+  color: #eef0ff;
+  letter-spacing: -0.015em;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+}
+
+.subtext {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: clamp(15px, 2.1dvw, 21px);
+  line-height: 1.6;
+  color: #cbd0dd;
+  margin: 0 0 var(--space-4) 0;
+  max-width: 60ch;
+}
+
+/* Short landscape phones */
+@media (max-height: 640px) and (orientation: landscape) {
+  .headline { font-size: clamp(22px, 4dvw, 38px); }
+  .subtext  { font-size: clamp(13px, 1.8dvw, 17px); }
+}
+
+/* ======================
+   CTA Button — upgraded
+   ====================== */
+.cta-button {
+  appearance: none;
+  font-family: var(--font-head);
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  font-size: clamp(16px, 2.2dvh, 20px);
+  padding: clamp(12px, 1.8dvh, 16px) clamp(22px, 3.2dvh, 32px);
+  border-radius: 14px;
+  border: 0;
+  color: #ffffff;
+  background: var(--cta-bg);
+  cursor: pointer;
+  box-shadow: 0 12px 26px rgba(168, 61, 213, 0.35);
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+  min-height: 44px;
+}
+.cta-button:hover {
+  background: var(--cta-bg-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 16px 32px rgba(168, 61, 213, 0.45);
+}
+.cta-button:active { transform: translateY(0); }
+.cta-button:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 4px rgba(255,255,255,0.22),
+    0 0 0 8px rgba(168, 61, 213, 0.45);
+}
+
+/* ======================
+   Glass Feature Strip
+   ====================== */
+.glassmorphic-box {
+  margin: var(--space-5) auto 0;
+  width: min(1300px, 94vw);        /* align with grid width */
+  border-radius: var(--radius);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  background: var(--glass);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-4);
+  animation: slideUp 700ms ease both;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(clamp(88px, 18dvw, 180px), 1fr));
+  align-items: center;
+  justify-items: center;
+  gap: clamp(12px, 3dvw, 40px);
+
+  container-type: inline-size;
+}
+
+.icon-wrapperr {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 92px;
+  transition: transform .25s ease;
+}
+.icon-wrapperr:hover { transform: translateY(-2px) scale(1.02); }
+
+.custom-icon {
+  font-size: clamp(20px, 5dvh, 44px);
+  color: #fff;
+  padding: clamp(8px, 1.2dvh, 12px);
+  border: 1px solid #ffffff40;
+  border-radius: 16px;
+  background-color: rgba(255, 255, 255, 0.08);
+  transition: transform .25s ease, border-color .25s ease;
+}
+.icon-wrapperr:hover .custom-icon { transform: scale(1.06); }
+
+.para {
+  color: #f1f1f1;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: clamp(12px, 1.8dvh, 14px);
+  letter-spacing: 0.3px;
+  opacity: 0.95;
+}
+
+/* If the features strip gets narrow, tighten spacing/fonts */
+@container (max-width: 520px) {
+  .custom-icon { font-size: clamp(18px, 4.2dvh, 28px); }
+  .icon-wrapperr { min-height: 78px; }
+}
+
+/* ======================
+   Animations
+   ====================== */
+@keyframes slideUpFade {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(40px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes floatUpDown {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-18px); }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .right-box.is-visible .box-image,
+  .right-box,
+  .left-box,
+  .glassmorphic-box {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* ======================
+   Mobile-first improvements + centering + 4-in-row
+   ====================== */
+@media (max-width: 900px) {
+  /* unified gutter so hero + strip align perfectly */
+  :root{ --mobile-gutter: max(var(--space-4), 4vw); }
+
+  .landing-container{
+    padding-left: var(--mobile-gutter) !important;
+    padding-right: var(--mobile-gutter) !important;
+  }
+
+  .grid-container{
+    padding-inline: 0 !important;
+    margin-inline: auto !important;
+  }
+
+  /* hero adjustments */
+  .grid-container { grid-template-columns: 1fr; }
+  .right-box { order: 1; padding: clamp(8px, 2dvh, 16px) 0 0; }
+  .left-box  { order: 2; align-items: center !important; text-align: center !important; }
+
+  .box-image {
+    width: clamp(300px, 90vw, 560px);
+    max-height: none;
+    aspect-ratio: auto;
+    margin-top: clamp(4px, 1dvh, 10px);
+  }
+  .headline { font-size: clamp(28px, 8vw, 40px); }
+  .subtext  { font-size: clamp(14px, 4vw, 18px); }
+  .cta-button { margin-top: 6px; }
+
+  /* glass strip: force single row of 4, centered, no wrap */
+  .glassmorphic-box{
+    width: calc(100% - (var(--mobile-gutter) * 2)) !important;
+    margin-inline: auto !important;
+
+    grid-template-columns: repeat(4, 1fr) !important;
+    grid-auto-flow: row !important;   /* keep items on one row */
+    gap: clamp(8px, 2.2vw, 14px) !important;
+    padding: clamp(10px, 2.2vw, 16px) !important;
+
+    border-radius: 18px;
+  }
+
+  .icon-wrapperr{
+    min-width: 0 !important;
+    min-height: clamp(66px, 12vw, 92px) !important;
+    padding: clamp(6px, 1.4vw, 12px) !important;
+    border-radius: 12px !important;
+    justify-items: center !important;
+  }
+
+  .custom-icon{
+    font-size: clamp(16px, 3.2vw, 26px) !important;
+    padding: clamp(4px, 0.9vw, 8px) !important;
+    border-radius: 12px !important;
+  }
+
+  .para{
+    font-size: clamp(10px, 2.2vw, 12px) !important;
+    line-height: 1.15 !important;
+    text-align: center !important;
+    white-space: normal !important;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 600px){
+  .glassmorphic-box{
+    gap: clamp(6px, 2.8vw, 10px) !important;
+    padding: clamp(10px, 2.6vw, 14px) !important;
+  }
+  .icon-wrapperr{
+    min-height: clamp(62px, 18vw, 86px) !important;
+  }
+  .custom-icon{ font-size: clamp(16px, 5.4vw, 24px) !important; }
+  .para{ font-size: clamp(10px, 3vw, 12px) !important; }
+}
+
+/* Ultra–small phones (<=380px): still 4-wide, just tighter */
+@media (max-width: 380px){
+  .glassmorphic-box{
+    gap: clamp(4px, 2.4vw, 8px) !important;
+    padding: clamp(8px, 2.2vw, 12px) !important;
+  }
+  .icon-wrapperr{ min-height: clamp(58px, 17vw, 78px) !important; }
+  .custom-icon{ font-size: clamp(14px, 5.6vw, 22px) !important; }
+  .para{ font-size: clamp(9px, 2.8vw, 11px) !important; }
+}
+
+/* Short viewports */
+@media (max-height: 720px) and (orientation: portrait) {
+  .box-image { width: clamp(300px, 88vw, 560px); }
+}
+
+/* Super short viewports */
+@media (max-height: 560px) {
+  .landing-container { padding-block: var(--space-3); }
+  .box-image { width: clamp(260px, 86vw, 520px); }
+}
+
+/* Ultrawide monitors */
+@media (min-aspect-ratio: 21/9) and (min-width: 1440px) {
+  .grid-container { max-width: min(1500px, 82vw); }
+  .headline { max-width: 20ch; }
+}
+
+/* Narrow portrait tablets */
+@media (min-width: 768px) and (max-width: 960px) and (orientation: portrait) {
+  .box-image { width: 70%; max-height: 58dvh; }
+}

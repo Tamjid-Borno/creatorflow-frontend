@@ -1,0 +1,330 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Sora:wght@600;700;800&display=swap');
+
+/* =====================================================
+   CreatorFlow — SignUpPage
+   - Centered on all breakpoints
+   - Clean auth card
+   - Google button polished (snug icon + text)
+   ===================================================== */
+.cf-signup{
+  --bg:#070812; --bg-2:#0B0F1E;
+  --ink:#F3F6FF; --muted:#AAB1C6;
+  --card:rgba(14,18,36,.82); --border:rgba(110,128,220,.22);
+  --acc-1:#66E0FF; --acc-2:#9B7BFF; --acc-3:#6EF7B1;
+  --r-lg:22px; --btn-h:54px; --sh-lg:0 32px 90px rgba(0,0,0,.48);
+  --font-head:"Sora",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  --font-body:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  --page-gutter:clamp(16px,4vw,56px);
+  --glow-1:radial-gradient(900px 640px at 12% 10%, rgba(153,127,255,.18) 0%, transparent 60%);
+  --glow-2:radial-gradient(900px 620px at 82% 88%, rgba(102,224,255,.16) 0%, transparent 62%);
+  --glow-3:radial-gradient(820px 540px at 50% 0%, rgba(110,247,177,.14) 0%, transparent 70%);
+}
+.cf-signup, .cf-signup *{ box-sizing:border-box; }
+
+/* Canvas */
+.cf-signup .signup-wrapper{
+  min-height:100dvh;
+  display:grid;
+  place-items:center;
+  padding-block:max(14px,2.6vh);
+  padding-inline:
+    calc(var(--page-gutter) + env(safe-area-inset-left,0px))
+    calc(var(--page-gutter) + env(safe-area-inset-right,0px));
+  background: var(--glow-1), var(--glow-2), var(--glow-3),
+    linear-gradient(180deg,var(--bg) 0%,var(--bg-2) 38%,#0A1021 100%);
+  overflow-x:hidden;
+  width:100%;
+}
+
+/* Layout container */
+.cf-signup .signup-container{
+  width:100%;
+  max-width:1160px;
+  margin-inline:auto;
+  display:grid;
+  grid-template-columns:minmax(320px,1fr) minmax(360px,520px);
+  gap:clamp(28px,5vw,76px);
+  align-items:center;
+  justify-items:center;
+}
+
+/* Left column */
+.cf-signup .signup-left{
+  width:100%;
+  max-width:600px;
+  display:flex; flex-direction:column; justify-content:center;
+  padding:clamp(6px,1.5vw,16px);
+}
+.cf-signup .brand{ display:inline-flex; align-items:center; gap:12px; margin:0 0 10px 0; }
+.cf-signup .brand__logo{ width:clamp(36px,3.4vw,56px); height:auto; filter:drop-shadow(0 12px 24px rgba(155,123,255,.28)) drop-shadow(0 4px 10px rgba(102,224,255,.20)); }
+.cf-signup .brand__name{ font-family:var(--font-head); font-weight:800; letter-spacing:-.02em; font-size:clamp(30px,3.4vw,46px); color:var(--ink); margin:0; line-height:1.06; text-shadow:0 1px 0 rgba(255,255,255,.04),0 14px 32px rgba(110,247,177,.12); }
+.cf-signup .brand__tagline{ font-family:var(--font-body); font-size:clamp(13px,1.05vw,16px); color:var(--muted); margin:10px 0 0; max-width:58ch; line-height:1.6; }
+
+/* Right column (auth card) */
+.cf-signup .signup-right{
+  width:100%; max-width:540px;
+  position:relative; min-inline-size:0;
+  background:
+    linear-gradient(180deg, rgba(18,22,40,.80), rgba(14,18,34,.78)),
+    linear-gradient(145deg, rgba(155,123,255,.10), rgba(102,224,255,.08) 60%, rgba(110,247,177,.08));
+  border:1px solid var(--border); border-radius:var(--r-lg);
+  box-shadow:var(--sh-lg); backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  padding:clamp(22px,2.4vw,28px); overflow:hidden;
+}
+.cf-signup .signup-right::before{
+  content:""; position:absolute; inset:-1px; pointer-events:none; border-radius:inherit;
+  background:radial-gradient(70% 120% at 50% 0%, rgba(155,123,255,.16), transparent 62%),
+             radial-gradient(90% 110% at 50% 100%, rgba(102,224,255,.12), transparent 60%);
+  mask:linear-gradient(#000, transparent 60%);
+}
+
+/* Header */
+.cf-signup .auth-top{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+.cf-signup .auth-headline{ font-family:var(--font-head); font-weight:800; color:var(--ink); letter-spacing:-.01em; font-size:clamp(20px,1.7vw,28px); margin:0; }
+.cf-signup .pill-link{
+  display:inline-flex; align-items:center; justify-content:center;
+  height:32px; padding:0 12px; border-radius:999px;
+  border:1.25px solid rgba(155,123,255,.65);
+  background:linear-gradient(180deg,#131B39,#0E1630); color:#D9DEFF;
+  font-family:var(--font-head); font-weight:800; letter-spacing:.1px; cursor:pointer;
+  transition:transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
+}
+.cf-signup .pill-link:hover{ background:#162143; border-color:rgba(155,123,255,.85); transform:translateY(-1px); box-shadow:0 8px 18px rgba(155,123,255,.22); }
+
+/* Error */
+.cf-signup .error-banner{
+  background:linear-gradient(180deg,#3E1120,#2C0D17); color:#FFD7E0;
+  border:1px solid rgba(255,110,155,.42); border-radius:12px;
+  padding:10px 12px; font-family:var(--font-body); font-weight:600; margin:6px 0 12px;
+}
+
+/* CTAs */
+.cf-signup .cta-wrap{ position:relative; margin:14px 0 8px; }
+.cf-signup .cta-wrap::before{
+  content:""; position:absolute; inset:-12px -10px -10px -10px; border-radius:28px; pointer-events:none; opacity:.55;
+  background:radial-gradient(60% 100% at 50% 0%, rgba(155,123,255,.22), transparent 70%),
+             radial-gradient(70% 120% at 50% 100%, rgba(102,224,255,.18), transparent 70%);
+  filter:blur(12px);
+}
+.cf-signup .cta-grid{
+  width:100%; display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
+  gap:clamp(12px,1.6vw,18px); align-items:stretch;
+}
+.cf-signup .cta-grid > *{ min-width:0; }
+
+/* === SNUG GOOGLE BUTTON FIX === */
+.cf-signup .google-button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;                          /* tighter gap */
+  
+  width:100%;
+  height:56px;
+  padding:0 20px;
+  border-radius:14px;
+  border:1px solid transparent;
+  cursor:pointer;
+
+  font-family:var(--font-head);
+  font-weight:700;
+  font-size:1.05rem;
+  line-height:1;
+  letter-spacing:.1px;
+
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+
+  transition:transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
+}
+.cf-signup .google-button > img{
+  width:22px; height:22px;
+  display:block;
+  object-fit:contain;
+  flex-shrink:0;
+}
+.cf-signup .google-button .btn-label{
+  display:inline-block;
+  line-height:1;
+  white-space:nowrap;
+}
+
+/* White variant */
+.cf-signup .google-button--google{
+  background:#fff;
+  color:#0E1330;
+  border-color:rgba(0,0,0,.12);
+  box-shadow:0 1px 0 rgba(255,255,255,.92) inset, 0 10px 22px rgba(16,20,40,.12);
+}
+.cf-signup .google-button--google:hover{
+  transform:translateY(-1px);
+  box-shadow:0 1px 0 rgba(255,255,255,.96) inset, 0 16px 30px rgba(16,20,40,.18);
+}
+.cf-signup .google-button--google:active{
+  transform:none;
+  box-shadow:0 1px 0 rgba(255,255,255,.86) inset, 0 8px 16px rgba(16,20,40,.14);
+}
+
+/* Outline variant */
+.cf-signup .google-button--outline{
+  background:linear-gradient(180deg,#11162F,#0C1430);
+  color:#E8F0FF;
+  border-color:rgba(102,224,255,.55);
+  box-shadow:0 10px 22px rgba(19,142,177,.16);
+}
+.cf-signup .google-button--outline:hover{
+  transform:translateY(-1px);
+  box-shadow:0 16px 28px rgba(19,142,177,.24);
+}
+
+/* Focus */
+.cf-signup .google-button:focus-visible,
+.cf-signup .pill-link:focus-visible,
+.cf-signup .text-link:focus-visible,
+.cf-signup .back-button:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 4px rgba(102,224,255,.28), 0 0 0 7px rgba(155,123,255,.30);
+}
+
+/* Notes */
+.cf-signup .cta-note{ margin-top:10px; color:#92A6CC; font-family:var(--font-body); font-size:.9rem; text-align:center; }
+.cf-signup .legal{ margin:12px 0 2px; color:var(--muted); font-family:var(--font-body); font-size:.93rem; line-height:1.55; text-align:center; }
+.cf-signup .legal a{ color:var(--acc-1); text-decoration:none; font-weight:800; }
+.cf-signup .legal a:hover{ text-decoration:underline; }
+.cf-signup .helper{ margin:0; color:#BAC2D6; font-family:var(--font-body); font-size:.98rem; text-align:center; }
+.cf-signup .text-link{ border:0; background:none; color:var(--acc-1); font-family:var(--font-head); font-weight:800; cursor:pointer; padding:0; margin-left:6px; text-decoration:underline; }
+.cf-signup .text-link:hover{ text-decoration-thickness:2px; }
+
+/* Back button */
+.cf-signup .back-button{
+  position:fixed; left:18px; bottom:18px; padding:10px 14px; border-radius:12px; border:0;
+  background:linear-gradient(180deg,#0FBA85,#0AAE7C); color:#081411; font-weight:900; font-family:var(--font-head);
+  cursor:pointer; box-shadow:0 14px 32px rgba(15,186,133,.28); transition:transform .18s ease, box-shadow .18s ease, filter .18s ease; z-index:10;
+}
+.cf-signup .back-button:hover{ transform:translateY(-1px); filter:brightness(1.03); box-shadow:0 18px 40px rgba(15,186,133,.36); }
+
+/* Responsive */
+@media (max-width:960px){
+  .cf-signup .signup-container{
+    grid-template-columns:1fr;
+    width:100%;
+    max-width:740px;
+    margin-inline:auto;
+    justify-items:center;
+  }
+  .cf-signup .signup-left,
+  .cf-signup .signup-right{
+    justify-self:center; width:100%; max-width:560px; margin-inline:auto;
+  }
+  .cf-signup .signup-left{ align-items:center; text-align:center; padding:8px 0 0; }
+  .cf-signup .brand{ justify-content:center; }
+}
+@media (max-width:560px){
+  .cf-signup .signup-right{ padding:clamp(16px,4.8vw,24px); }
+  .cf-signup .google-button{ height:50px; padding:0 16px; font-size:.96rem; gap:6px; }
+  .cf-signup .google-button > img{ width:20px; height:20px; }
+  .cf-signup .brand__name{ font-size:clamp(24px,7.2vw,36px); }
+  .cf-signup .brand__logo{ width:clamp(30px,8vw,46px); }
+  .cf-signup .brand__tagline{ font-size:clamp(12px,3.4vw,14px); }
+}
+@media (max-width:360px){
+  .cf-signup .signup-container{ width:100%; max-width:340px; }
+  .cf-signup .signup-right{ border-radius:18px; }
+  .cf-signup .google-button{ height:48px; font-size:.9rem; }
+}
+@media (prefers-reduced-motion:reduce){
+  .cf-signup .google-button,
+  .cf-signup .text-link,
+  .cf-signup .pill-link,
+  .cf-signup .back-button{ transition:none !important; }
+}
+
+/* === ULTRA-SNUG GOOGLE BUTTON === */
+.cf-signup .google-button {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  gap:4px;                        /* tighter gap between logo & text */
+  width:100%;
+  height:52px;                    /* slightly smaller than before */
+  padding:0 18px;
+  border-radius:14px;
+  border:1px solid transparent;
+  cursor:pointer;
+
+  font-family:var(--font-head);
+  font-weight:600;                /* lighter weight for balance */
+  font-size:.95rem;               /* reduced font size */
+  line-height:1;
+  letter-spacing:.05px;
+
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+
+/* ICON (shift inward) */
+.cf-signup .google-button > img {
+  width:20px;
+  height:20px;
+  display:block;
+  object-fit:contain;
+  flex-shrink:0;
+
+  margin-left:4px;    /* push logo slightly rightward */
+}
+
+/* LABEL (shift left a bit) */
+.cf-signup .google-button .btn-label {
+  display:inline-block;
+  line-height:1;
+  transform:translateX(-2px); /* pull text slightly left */
+  white-space:nowrap;
+}
+
+/* White Google variant */
+.cf-signup .google-button--google {
+  background:#fff;
+  color:#0E1330;
+  border-color:rgba(0,0,0,.12);
+  box-shadow:0 1px 0 rgba(255,255,255,.9) inset, 0 10px 18px rgba(16,20,40,.12);
+}
+.cf-signup .google-button--google:hover {
+  transform:translateY(-1px);
+  box-shadow:0 1px 0 rgba(255,255,255,.95) inset, 0 14px 24px rgba(16,20,40,.18);
+}
+
+/* Outline variant */
+.cf-signup .google-button--outline {
+  background:linear-gradient(180deg,#11162F,#0C1430);
+  color:#E8F0FF;
+  border-color:rgba(102,224,255,.55);
+  box-shadow:0 8px 18px rgba(19,142,177,.16);
+}
+.cf-signup .google-button--outline:hover {
+  transform:translateY(-1px);
+  box-shadow:0 12px 24px rgba(19,142,177,.22);
+}
+
+/* Mobile adjustments */
+@media (max-width:560px){
+  .cf-signup .google-button {
+    height:48px;
+    padding:0 14px;
+    font-size:.9rem;
+    gap:3px;
+  }
+  .cf-signup .google-button > img {
+    width:18px; height:18px;
+    margin-left:3px;
+  }
+  .cf-signup .google-button .btn-label {
+    transform:translateX(-1px);
+  }
+}
