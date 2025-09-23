@@ -10,7 +10,6 @@ export default function WhyUs({ onCTAClick }) {
     { label: "Setup & effort",               pro: "Pick options. No long prompts.",  gen: "Write long prompts and rules." },
     { label: "Time to ready script",         pro: "~30–60s",                         gen: "~10–20 min of tweaks" },
     { label: "Hook first",                   pro: "Starts strong in 3s",             gen: "Slow intro" },
-    { label: "Beat timing (0–3s / 3–8s / 8–12s)", pro: "Auto-timed",                gen: "Manual timing" },
     { label: "Overlays & captions",          pro: "Matches each beat",               gen: "Free text; off-beat" },
     { label: "Hook options",                 pro: "A/B hooks ready",                 gen: "Re-prompt to try more" },
     { label: "Style stays the same",         pro: "Consistent tone",                 gen: "Changes each time" },
