@@ -78,27 +78,59 @@ function DoorwayPage() {
     return output.length ? output : null;
   }, []);
 
-  const extractErrorMessage = useCallback(async (response) => {
-    let errorMessage = `Request failed (${response.status})`;
+  const formatErrorForDisplay = useCallback((value) => {
+    if (value == null) return "Unknown error";
+
+    if (typeof value === "string") {
+      return value;
+    }
 
     try {
-      const data = await response.json();
-      errorMessage =
-        data?.error ||
-        data?.message ||
-        data?.detail ||
-        JSON.stringify(data);
+      return `\`\`\`json\n${JSON.stringify(value, null, 2)}\n\`\`\``;
+    } catch {
+      return String(value);
+    }
+  }, []);
+
+  const extractErrorMessage = useCallback(async (response) => {
+    const fallbackMessage = `Request failed (${response.status})`;
+
+    try {
+      const data = await response.clone().json();
+      console.error("Full backend error payload:", data);
+
+      if (data?.upstream) {
+        return formatErrorForDisplay(data.upstream);
+      }
+
+      if (data?.error) {
+        return typeof data.error === "string"
+          ? data.error
+          : formatErrorForDisplay(data.error);
+      }
+
+      if (data?.message) {
+        return typeof data.message === "string"
+          ? data.message
+          : formatErrorForDisplay(data.message);
+      }
+
+      if (data?.detail) {
+        return typeof data.detail === "string"
+          ? data.detail
+          : formatErrorForDisplay(data.detail);
+      }
+
+      return formatErrorForDisplay(data);
     } catch {
       try {
         const text = await response.text();
-        errorMessage = text || response.statusText || errorMessage;
+        return text || response.statusText || fallbackMessage;
       } catch {
-        errorMessage = response.statusText || errorMessage;
+        return response.statusText || fallbackMessage;
       }
     }
-
-    return errorMessage;
-  }, []);
+  }, [formatErrorForDisplay]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -285,7 +317,7 @@ function DoorwayPage() {
       if (!response.ok) {
         const errorMessage = await extractErrorMessage(response);
         console.error("Backend error:", errorMessage);
-        setGeneratedText(`Error: ${errorMessage}`);
+        setGeneratedText(`Error:\n\n${errorMessage}`);
         setIsThinking(false);
         return;
       }
