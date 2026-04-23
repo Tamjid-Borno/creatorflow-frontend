@@ -8,8 +8,7 @@ import React, {
 } from "react";
 import { FaCopy } from "react-icons/fa";
 import { IoArrowBackCircle } from "react-icons/io5";
-import { useNavigate, useLocation } from "react-router-dom";
-import { auth, db } from "../firebase";
+import { useLocation, useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import {
   addDoc,
@@ -20,8 +19,10 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import ReactMarkdown from "react-markdown";
-import "./DoorwayPage.css";
+
+import { auth, db } from "../firebase";
 import logo from "../logo.png";
+import "./DoorwayPage.css";
 
 function DoorwayPage() {
   const [user, setUser] = useState(null);
@@ -64,17 +65,39 @@ function DoorwayPage() {
     const rx =
       /\*\*(Hook|Body|CTA):\*\*([\s\S]*?)(?=\n{2,}\*\*(?:Hook|Body|CTA):\*\*|\s*$)/gi;
 
-    const out = [];
+    const output = [];
     let match;
 
     while ((match = rx.exec(md)) !== null) {
-      out.push({
+      output.push({
         key: match[1],
         content: (match[2] || "").trim(),
       });
     }
 
-    return out.length ? out : null;
+    return output.length ? output : null;
+  }, []);
+
+  const extractErrorMessage = useCallback(async (response) => {
+    let errorMessage = `Request failed (${response.status})`;
+
+    try {
+      const data = await response.json();
+      errorMessage =
+        data?.error ||
+        data?.message ||
+        data?.detail ||
+        JSON.stringify(data);
+    } catch {
+      try {
+        const text = await response.text();
+        errorMessage = text || response.statusText || errorMessage;
+      } catch {
+        errorMessage = response.statusText || errorMessage;
+      }
+    }
+
+    return errorMessage;
   }, []);
 
   useEffect(() => {
@@ -83,18 +106,21 @@ function DoorwayPage() {
 
       if (!currentUser) {
         setCredits(null);
+        setIsThinking(false);
         return;
       }
 
       try {
-        await fetch(`${API_BASE_URL}/api/refresh-credits/`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            uid: currentUser.uid,
-            email: currentUser.email,
-          }),
-        });
+        if (API_BASE_URL) {
+          await fetch(`${API_BASE_URL}/api/refresh-credits/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              uid: currentUser.uid,
+              email: currentUser.email,
+            }),
+          });
+        }
       } catch {
         // Ignore refresh errors here
       }
@@ -188,6 +214,12 @@ function DoorwayPage() {
   const fetchChatGPT = useCallback(async () => {
     if (!user) return;
 
+    if (!API_BASE_URL) {
+      setGeneratedText("Error: API base URL is missing.");
+      setIsThinking(false);
+      return;
+    }
+
     if (!niche || !subCategory || !followerCount || !tone) {
       navigate("/target", { replace: true });
       return;
@@ -251,16 +283,16 @@ function DoorwayPage() {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Backend error:", errorText);
-        setGeneratedText(`Error: ${response.statusText}`);
+        const errorMessage = await extractErrorMessage(response);
+        console.error("Backend error:", errorMessage);
+        setGeneratedText(`Error: ${errorMessage}`);
         setIsThinking(false);
         return;
       }
 
       const data = await response.json();
       const fullText = cleanScript(
-        data.response || "Error: No response from backend."
+        data?.response || "Error: No response from backend."
       );
 
       let index = 0;
@@ -296,12 +328,13 @@ function DoorwayPage() {
       setCredits(newCredits);
     } catch (error) {
       console.error("Generation failed:", error);
-      setGeneratedText(`Error: ${error.message}`);
+      setGeneratedText(`Error: ${error.message || "Something went wrong."}`);
       setIsThinking(false);
     }
   }, [
     API_BASE_URL,
     cleanScript,
+    extractErrorMessage,
     followerCount,
     moreSpecific,
     navigate,
